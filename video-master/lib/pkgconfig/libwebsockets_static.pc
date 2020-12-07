@@ -1,0 +1,12 @@
+prefix="/opt/bsp/HI3531D_BSP/build/my_software_set/libwebsockets/libwebsockets-v3.1-stable/install"
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libwebsockets_static
+Description: Websockets server and client static library
+Version: 3.1.0
+
+Libs: -L${libdir} -lwebsockets_static
+Libs.private:
+Cflags: -I${includedir}

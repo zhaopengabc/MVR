@@ -1,0 +1,89 @@
+TARGET=H9U_MVR_Card
+CC = arm-hisiv500-linux-gcc
+CXX = arm-hisiv500-linux-g++
+SSC339G_PATH=./sigmastar/SSC339G
+
+INC_PATH = -I${BOOST_INC} -DBOOST_BIND_GLOBAL_PLACEHOLDERS -I. -Iinclude/ -Ilibcommon -IcFWK/include/  -ICXStreamer/common/
+INC_PATH+= -I./include/liveMedia
+INC_PATH+= -I./include/groupsock
+INC_PATH+= -I./include/UsageEnvironment
+INC_PATH+= -I./include/BasicUsageEnvironment
+
+
+
+HI_SDK = ../../build/Hi3531D_SDK_V1.0.3.0
+MPP_DIR = ${HI_SDK}/mpp
+INC_PATH += -I${MPP_DIR}/sample/audio/adp/
+INC_PATH += -I${MPP_DIR}/include
+INC_PATH += -I${MPP_DIR}/extdrv/tlv320aic31/ -I${MPP_DIR}/extdrv/nvp6134_ex/  -I${MPP_DIR}/extdrv/tp2853c/
+
+
+
+CFLAGS= -Wall -g ${INC_PATH} -lpthread -lm -ldl
+CXXFLAGS= -std=gnu++11 ${CFLAGS}
+
+MPP_LIB_DIR = ${HI_SDK}/mpp/lib
+
+LDLIBS = -LcFWK/lib/ -lcFWK
+
+LDLIBS += -L./lib/ -lwebsockets -lssl -lcrypto -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment
+
+LDLIBS += ${MPP_LIB_DIR}/libmpi.a
+LDLIBS += ${MPP_LIB_DIR}/libjpeg.a
+LDLIBS += ${MPP_LIB_DIR}/libupvqe.a
+LDLIBS += ${MPP_LIB_DIR}/libdnvqe.a
+LDLIBS += ${MPP_LIB_DIR}/libVoiceEngine.a
+LDLIBS += ${MPP_LIB_DIR}/libhdmi.a
+
+
+
+CXX_SRC = main.cpp \
+	  player.cpp \
+	  CXStreamer/element.cpp \
+	  CXStreamer/factory.cpp \
+	  CXStreamer/Hisilicon/hielement.cpp \
+	  CXStreamer/Hisilicon/Hi3531DV100/factoryforhi3531dv100.cpp \
+	  CXStreamer/Hisilicon/Hi3531DV100/vihi3531dv100.cpp \
+      CXStreamer/Hisilicon/Hi3531DV100/hi3531dv100_lib.cpp \
+      CXStreamer/Hisilicon/Hi3531DV100/vohi3531dv100.cpp \
+      CXStreamer/Hisilicon/Hi3531DV100/venchi3531dv100.cpp \
+      CXStreamer/Hisilicon/Hi3531DV100/vpsshi3531dv100.cpp \
+	  CXStreamer/common/factorycommon.cpp \
+	  CXStreamer/common/websocketserver.cpp \
+	  CXStreamer/common/httpserver.cpp \
+	  CXStreamer/common/websocketserverinf.cpp \
+	  CXStreamer/common/websocketserverimplcfwk.cpp \
+	  CXStreamer/common/livertspserver.cpp \
+	  CXStreamer/common/FramedPipeSource.cpp \
+	  CXStreamer/common/RTSPH264PassiveServer.cpp \
+	  CXStreamer/common/RTSPServer.cpp \
+	  CXStreamer/common/RTSPOnDemandServer.cpp \
+	  CXStreamer/common/VideoPipeServerMediaSubsession.cpp 
+C_SRC = \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/loadbmp.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_audio.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_ivs.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_sys.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_vda.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_vdec.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_venc.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_vi.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_vo.c \
+	  CXStreamer/Hisilicon/Hi3531DV100/common/sample_comm_vpss.c
+
+
+CXXOBJS := $(CXX_SRC:.cpp=.ox)
+COBJS := $(C_SRC:.c=.o)
+%.ox:%.cpp
+	$(CXX) $< $(CXXFLAGS)  -c -o $@
+%.o:%.c
+	$(CC) $< -std=gnu99 $(CFLAGS)  -c -o $@
+$(TARGET): $(COBJS)  $(CXXOBJS)
+	$(CXX) ${CXXFLAGS} $^ $(LDLIBS) -o $@
+all: $(TARGET)
+clean:
+	rm -f $(TARGET)
+	rm -f $(COBJS)  $(CXXOBJS)
+	#find ./ -name "*.ox" -exec rm {} \;
+
+distclean: clean
