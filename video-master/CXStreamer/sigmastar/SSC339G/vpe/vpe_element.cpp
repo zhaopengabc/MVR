@@ -35,52 +35,51 @@ namespace CXS{
             *************************************************/
             ST_VPE_ChannelInfo_T stVpeChannelInfo;
 
-            printf("start vpe ========================\n");
             memset(&stVpeChannelInfo, 0, sizeof(ST_VPE_ChannelInfo_T));
-            stVpeChannelInfo.u16VpeMaxW = 3840;
-            stVpeChannelInfo.u16VpeMaxH = 2160;
+            stVpeChannelInfo.u16VpeMaxW = 1920;
+            stVpeChannelInfo.u16VpeMaxH = 1080;
             stVpeChannelInfo.u32X = 0;
             stVpeChannelInfo.u32Y = 0;
             stVpeChannelInfo.u16VpeCropW = 0;
             stVpeChannelInfo.u16VpeCropH = 0;
             stVpeChannelInfo.eRunningMode = E_MI_VPE_RUN_CAM_MODE;
-            stVpeChannelInfo.eFormat = (MI_SYS_PixelFormat_e)35;
+            stVpeChannelInfo.eFormat = (MI_SYS_PixelFormat_e)44;
             stVpeChannelInfo.eHDRtype = E_MI_VPE_HDR_TYPE_OFF;
-
             stVpeChannelInfo.eBindSensorId = E_MI_VPE_SENSOR1;
 
 
             (ST_Vpe_CreateChannel(vpechn, &stVpeChannelInfo));
             (ST_Vpe_StartChannel(vpechn));
 
-            printf("\n\n\n >>>>>>>>>>>>>>> VPE channel >>>>>>>>>>>>>>>>> \n");
-            printf(" stVpeChannelInfo.u16VpeMaxH : %d \n",stVpeChannelInfo.u16VpeMaxH);
-            printf("stVpeChannelInfo.u16VpeMaxW : %d \n",stVpeChannelInfo.u16VpeMaxW);
-            printf("stVpeChannelInfo.eRunningMode : %d \n",stVpeChannelInfo.eRunningMode);
-            printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
-            printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
-            printf("stVpeChannelInfo.eBindSensorId : %d\n",stVpeChannelInfo.eBindSensorId);
+            // printf("\n\n\n >>>>>>>>>>>>>>> VPE channel >>>>>>>>>>>>>>>>> \n");
+            // printf("vpechn : %d \n",vpechn);
+            // printf(" stVpeChannelInfo.u16VpeMaxH : %d \n",stVpeChannelInfo.u16VpeMaxH);
+            // printf("stVpeChannelInfo.u16VpeMaxW : %d \n",stVpeChannelInfo.u16VpeMaxW);
+            // printf("stVpeChannelInfo.eRunningMode : %d \n",stVpeChannelInfo.eRunningMode);
+            // printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
+            // printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
+            // printf("stVpeChannelInfo.eBindSensorId : %d\n",stVpeChannelInfo.eBindSensorId);
 
 
             ST_VPE_PortInfo_T stVpePortInfo;
             //MI_U16  u16VpePortWidth=1920, u16VpePortheight=1080;
             memset(&stVpePortInfo, 0, sizeof(ST_VPE_PortInfo_T));
 
-            stVpePortInfo.DepVpeChannel = 0;
-            stVpePortInfo.u16OutputWidth = 1920;
-            stVpePortInfo.u16OutputHeight = 1080;
+            stVpePortInfo.DepVpeChannel = vpechn;
+            stVpePortInfo.u16OutputWidth = 1280;
+            stVpePortInfo.u16OutputHeight = 720;
             stVpePortInfo.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
             stVpePortInfo.eCompressMode = E_MI_SYS_COMPRESS_MODE_NONE;
-            STCHECKRESULT(ST_Vpe_StartPort(vpechn , &stVpePortInfo));
+            STCHECKRESULT(ST_Vpe_StartPort(0 , &stVpePortInfo));
 
             CXS_PRT("VPE(%d) start ok\n",mHandle);
 
-            printf("\n\n\n >>>>>>>>>>>>>> VPE port info <<<<<<<<<<<<<<<<<<<<< \n");
-            printf("stVpePortInfo.DepVpeChannel : %d \n",stVpePortInfo.DepVpeChannel);
-            printf("stVpePortInfo.u16OutputWidth : %d \n",stVpePortInfo.u16OutputWidth);
-            printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
-            printf("stVpePortInfo.ePixelFormat : %d \n",stVpePortInfo.ePixelFormat);
-            printf("stVpePortInfo.eCompressMode : %d \n",stVpePortInfo.eCompressMode);
+            // printf("\n\n\n >>>>>>>>>>>>>> VPE port info <<<<<<<<<<<<<<<<<<<<< \n");
+            // printf("stVpePortInfo.DepVpeChannel : %d \n",stVpePortInfo.DepVpeChannel);
+            // printf("stVpePortInfo.u16OutputWidth : %d \n",stVpePortInfo.u16OutputWidth);
+            // printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
+            // printf("stVpePortInfo.ePixelFormat : %d \n",stVpePortInfo.ePixelFormat);
+            // printf("stVpePortInfo.eCompressMode : %d \n",stVpePortInfo.eCompressMode);
 
             return ret;
         }
@@ -113,8 +112,8 @@ namespace CXS{
                 stBindInfo.u32DstFrmrate = 30;
                 stBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
                 ret = ST_Sys_Bind(&stBindInfo);
-                printf("ST_Sys_Bind ret : %d \n",ret);
-                CXS_PRT("-------------------------vpe bind venc bind sucess \n");
+                // printf("ST_Sys_Bind ret : %d \n",ret);
+                // CXS_PRT("-------------------------vpe bind venc bind sucess \n");
 
                 // printf("\n\n\n\n >>>>>>>>>>>>>> VENC -> VPE <<<<<<<<<<<<<<<<<<<<<<<<<< \n");
                 // printf("stBindInfo.stSrcChnPort.eModId : %d \n",stBindInfo.stSrcChnPort.eModId);
