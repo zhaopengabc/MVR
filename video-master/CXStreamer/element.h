@@ -10,9 +10,9 @@ namespace CXS{
     class Element
     {
         std::string mClassName;
-        std::vector<Element*> mNextElems;
         std::map<std::string,std::string> mAttrMap;
     protected:
+        std::vector<Element*> mNextElems;
         enum EState
         {
             Init,
@@ -88,8 +88,7 @@ namespace CXS{
             {
                 for(size_t i = 0;i < mNextElems.size();i++)
                 {
-                    printf("**************** i : %d",i);
-                    printf("mNextElems.size() : %d \n",mNextElems.size());
+
                     DEBUG("----------linkedElem(%u) %s\n",(uint32_t)i,mNextElems[i]->getClassName());
                     if(mNextElems[i]->start() != 0 || linkTo(mNextElems[i]) != 0){
                         stop();

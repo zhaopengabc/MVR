@@ -31,19 +31,22 @@ namespace CXS{
     class VENCSSC339G : public HiElement
     {
         static std::vector<VENCSSC339G*> arr_VENCSSC339G;
-        VENCSSC339G():HiElement(ELEMENT_CLASS_NAME){
-            for(int i =0;i < 32;i++){
-                if(arr_VENCSSC339G[i] == nullptr){
-                    mHandle = i;
-                    break;
-                }
-            }
-            arr_VENCSSC339G[mHandle] = this;
-            setAttr("VENC-CHN",mHandle);
-            setAttr("VENC-SRC-FRAMERATE",60);
-            setAttr("VENC-FRAMERATE",15);
-            setAttr("VENC-MODE","HD1080");
-            setAttr("VENC-PAYLOAD","h264");
+        VENCSSC339G():HiElement(ELEMENT_CLASS_NAME)
+        {
+            // for(int i =0;i < 32;i++){
+            //     if(arr_VENCSSC339G[i] == nullptr){
+            //         mHandle = i;
+            //         break;
+            //     }
+            // }
+            // arr_VENCSSC339G[mHandle] = this;
+            // setAttr("VENC-CHN",mHandle);
+            // setAttr("VENC-SRC-FRAMERATE",60);
+            // setAttr("VENC-FRAMERATE",15);
+            // setAttr("VENC-MODE","HD1080");
+            // setAttr("VENC-PAYLOAD","h264");
+            setAttr("FIRST_VENC-CHN","0");
+            setAttr("SECOND_VENC-CHN","2");
         }
         
     public:
@@ -63,7 +66,7 @@ namespace CXS{
         }
         static void* getH264data(void *para)
         {
-            MI_VENC_CHN VencChn = 2;
+;
             MI_SYS_BufInfo_t stBufInfo;
             MI_S32 s32Ret = MI_SUCCESS;
             MI_U32 u32DevId = 0;
@@ -75,6 +78,9 @@ namespace CXS{
             size_t len;
             
             elem = (VENCSSC339G*)para;
+            MI_VENC_CHN VencChn = atoi(elem->getAttr("SECOND_VENC-CHN","2").c_str());
+            printf("===================VencChn : %d ==================\n",VencChn);
+
             s32Ret = MI_VENC_GetChnDevid(VencChn, &u32DevId);
             if(MI_SUCCESS != s32Ret)
             {
@@ -90,6 +96,7 @@ namespace CXS{
                 stStream.u32PackCount = 1;
                 s32Ret = MI_VENC_Query(VencChn, &stStat);
 
+                // printf("stStat.u32CurPacks : %d \n",stStat.u32CurPacks);
                 if(s32Ret != MI_SUCCESS || stStat.u32CurPacks == 0)
                 {
                         usleep(1000);
@@ -98,11 +105,15 @@ namespace CXS{
                 s32Ret = MI_VENC_GetStream(VencChn, &stStream, 400);
                 if(MI_SUCCESS == s32Ret)
                 {
+
                     len = stStream.pstPack[0].u32Len;
+                    // printf("len : %d \n",len);
                     data = (uint8_t* )malloc(len);
                     memcpy(data, stStream.pstPack[0].pu8Addr, len);
+
                     struct Buffer buf = {data,(size_t)len};
                     elem->pushNext(&buf);
+
 
                     s32Ret = MI_VENC_ReleaseStream(VencChn, &stStream);
                     if(s32Ret != MI_SUCCESS)
@@ -110,25 +121,22 @@ namespace CXS{
                         ST_WARN("RELEASE venc buffer fail\n");
                         printf("release VENC stream s32Ret : 0x%x \n",s32Ret);
                     }
-                    else
-                    {
-                        // printf("release stream \n");
-                    }
-                    
-                    free(data);
+
                 }
                 else
                 {
                     printf("s32Ret : 0x%x \n",s32Ret);
                 }
-                usleep(1000);
+                free(data);
+
+                // usleep(1000);
             }
-        
+
             return 0;    
         }
         int startSelf(){
             int ret = 0;
-            MI_VENC_CHN VencChn = 2;
+            MI_VENC_CHN VencChn = atoi(getAttr("SECOND_VENC-CHN","2").c_str());
 
             MI_U32 u32VencDevId = 0xff;
             /************************************************
@@ -157,24 +165,24 @@ namespace CXS{
             STCHECKRESULT(ST_Venc_CreateChannel(VencChn, &stChnAttr));
             STCHECKRESULT(ST_Venc_StartChannel(VencChn));
 
-            // printf("\n\n\n >>>>>>>>>>>> VENC channal <<<<<<<<<<<<<<<<<<<<< \n");
-            // printf("VencChn : %d \n",VencChn);
+            printf("\n\n\n >>>>>>>>>>>> VENC channal <<<<<<<<<<<<<<<<<<<<< \n");
+            printf("VencChn : %d \n",VencChn);
 
-            // printf("stChnAttr.stVeAttr.stAttrH264e.u32PicWidth : %d\n",stChnAttr.stVeAttr.stAttrH264e.u32PicWidth);
-            // printf("stChnAttr.stVeAttr.stAttrH264e.u32PicHeight : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32PicHeight);
-            // printf("stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth);
-            // printf("stChnAttr.stVeAttr.stAttrH264e.u32BFrameNum : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32BFrameNum);
-            // printf("stChnAttr.stVeAttr.stAttrH264e.bByFrame : %d \n",stChnAttr.stVeAttr.stAttrH264e.bByFrame);
-            // printf("stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight);
+            printf("stChnAttr.stVeAttr.stAttrH264e.u32PicWidth : %d\n",stChnAttr.stVeAttr.stAttrH264e.u32PicWidth);
+            printf("stChnAttr.stVeAttr.stAttrH264e.u32PicHeight : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32PicHeight);
+            printf("stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth);
+            printf("stChnAttr.stVeAttr.stAttrH264e.u32BFrameNum : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32BFrameNum);
+            printf("stChnAttr.stVeAttr.stAttrH264e.bByFrame : %d \n",stChnAttr.stVeAttr.stAttrH264e.bByFrame);
+            printf("stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight : %d \n",stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight);
 
-            // printf("\n stChnAttr.stRcAttr.eRcMode : %d \n",stChnAttr.stRcAttr.eRcMode);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen);
-            // printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime);
-            // printf("stChnAttr.stVeAttr.eType : %d \n",stChnAttr.stVeAttr.eType);
+            printf("\n stChnAttr.stRcAttr.eRcMode : %d \n",stChnAttr.stRcAttr.eRcMode);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen);
+            printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime);
+            printf("stChnAttr.stVeAttr.eType : %d \n",stChnAttr.stVeAttr.eType);
 
             pthread_create(&pthreadId,NULL,getH264data,(void *)this);
 

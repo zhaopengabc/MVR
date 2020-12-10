@@ -32,7 +32,9 @@ int main(int argc,  char *argv[])
 
     Player * player = Player::getInstance(chn1,chn2,port1,port2,protocol);
     if(player != nullptr)
+    {
         player->start();
+    }
     else{
         cf_log(NULL,CF_LOG_ERROR,"create player failure.\n");
         return -1;

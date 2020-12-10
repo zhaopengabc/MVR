@@ -16,7 +16,7 @@ namespace CXS{
     {
         Vpe():HiElement(ELEMENT_CLASS_NAME)
         {
-
+            setAttr("SECOND_VPE_CHNID","2");
         }
     public:
         static Element* createInstance()
@@ -28,7 +28,8 @@ namespace CXS{
         {
             int ret = 0;
             MI_VIF_DEV vifDev = 2;
-            MI_VPE_CHANNEL vpechn = 2;
+            // MI_VIF_DEV vifDev = atoi(this->mNextElems.back()->getAttr("SECONDE_VIF-DEV","2").c_str());
+            MI_VPE_CHANNEL vpechn = atoi(getAttr("SECOND_VPE_CHNID","2").c_str());
             MI_VENC_CHN VencChn = 2;
             /************************************************
             Step3:  init VPE (create one VPE)
@@ -44,6 +45,8 @@ namespace CXS{
             stVpeChannelInfo.u16VpeCropH = 0;
             stVpeChannelInfo.eRunningMode = E_MI_VPE_RUN_CAM_MODE;
             stVpeChannelInfo.eFormat = (MI_SYS_PixelFormat_e)44;
+            // stVpeChannelInfo.eFormat = (MI_SYS_PixelFormat_e)(atoi(this->mNextElems.back()->getAttr("PIXFORMAT","44").c_str()));
+
             stVpeChannelInfo.eHDRtype = E_MI_VPE_HDR_TYPE_OFF;
             stVpeChannelInfo.eBindSensorId = E_MI_VPE_SENSOR1;
 
@@ -51,14 +54,14 @@ namespace CXS{
             (ST_Vpe_CreateChannel(vpechn, &stVpeChannelInfo));
             (ST_Vpe_StartChannel(vpechn));
 
-            // printf("\n\n\n >>>>>>>>>>>>>>> VPE channel >>>>>>>>>>>>>>>>> \n");
-            // printf("vpechn : %d \n",vpechn);
-            // printf(" stVpeChannelInfo.u16VpeMaxH : %d \n",stVpeChannelInfo.u16VpeMaxH);
-            // printf("stVpeChannelInfo.u16VpeMaxW : %d \n",stVpeChannelInfo.u16VpeMaxW);
-            // printf("stVpeChannelInfo.eRunningMode : %d \n",stVpeChannelInfo.eRunningMode);
-            // printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
-            // printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
-            // printf("stVpeChannelInfo.eBindSensorId : %d\n",stVpeChannelInfo.eBindSensorId);
+            printf("\n\n\n >>>>>>>>>>>>>>> VPE channel >>>>>>>>>>>>>>>>> \n");
+            printf("vpechn : %d \n",vpechn);
+            printf(" stVpeChannelInfo.u16VpeMaxH : %d \n",stVpeChannelInfo.u16VpeMaxH);
+            printf("stVpeChannelInfo.u16VpeMaxW : %d \n",stVpeChannelInfo.u16VpeMaxW);
+            printf("stVpeChannelInfo.eRunningMode : %d \n",stVpeChannelInfo.eRunningMode);
+            printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
+            printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
+            printf("stVpeChannelInfo.eBindSensorId : %d\n",stVpeChannelInfo.eBindSensorId);
 
 
             ST_VPE_PortInfo_T stVpePortInfo;
@@ -72,14 +75,14 @@ namespace CXS{
             stVpePortInfo.eCompressMode = E_MI_SYS_COMPRESS_MODE_NONE;
             STCHECKRESULT(ST_Vpe_StartPort(0 , &stVpePortInfo));
 
-            CXS_PRT("VPE(%d) start ok\n",mHandle);
+            // CXS_PRT("VPE(%d) start ok\n",mHandle);
 
-            // printf("\n\n\n >>>>>>>>>>>>>> VPE port info <<<<<<<<<<<<<<<<<<<<< \n");
-            // printf("stVpePortInfo.DepVpeChannel : %d \n",stVpePortInfo.DepVpeChannel);
-            // printf("stVpePortInfo.u16OutputWidth : %d \n",stVpePortInfo.u16OutputWidth);
-            // printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
-            // printf("stVpePortInfo.ePixelFormat : %d \n",stVpePortInfo.ePixelFormat);
-            // printf("stVpePortInfo.eCompressMode : %d \n",stVpePortInfo.eCompressMode);
+            printf("\n\n\n >>>>>>>>>>>>>> VPE port info <<<<<<<<<<<<<<<<<<<<< \n");
+            printf("stVpePortInfo.DepVpeChannel : %d \n",stVpePortInfo.DepVpeChannel);
+            printf("stVpePortInfo.u16OutputWidth : %d \n",stVpePortInfo.u16OutputWidth);
+            printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
+            printf("stVpePortInfo.ePixelFormat : %d \n",stVpePortInfo.ePixelFormat);
+            printf("stVpePortInfo.eCompressMode : %d \n",stVpePortInfo.eCompressMode);
 
             return ret;
         }
@@ -89,10 +92,12 @@ namespace CXS{
             MI_S32 ret = 0;
             ST_Sys_BindInfo_T stBindInfo;
             MI_U32 u32VencDevId = 0xff;
-            MI_VIF_DEV vifDev = 2;
-            MI_VPE_CHANNEL vpechn = 2;
+            MI_VIF_DEV vifDev  = 2;
+            // MI_VIF_DEV vifDev = atoi(this->mNextElems.back()->getAttr("SECONDE_VIF-DEV","2").c_str());
+            MI_VPE_CHANNEL vpechn = atoi(getAttr("SECOND_VPE_CHNID","2").c_str());;
+            // MI_VENC_CHN VencChn = atoi(this->mNextElems.front()->getAttr("SECOND_VENC-CHN","2").c_str());
             MI_VENC_CHN VencChn = 2;
-
+            
             if(strcmp(hiElem->getClassName(),"venc") == 0)
             {
                 ExecFunc(MI_VENC_GetChnDevid(VencChn, &u32VencDevId), MI_SUCCESS);
@@ -115,18 +120,18 @@ namespace CXS{
                 // printf("ST_Sys_Bind ret : %d \n",ret);
                 // CXS_PRT("-------------------------vpe bind venc bind sucess \n");
 
-                // printf("\n\n\n\n >>>>>>>>>>>>>> VENC -> VPE <<<<<<<<<<<<<<<<<<<<<<<<<< \n");
-                // printf("stBindInfo.stSrcChnPort.eModId : %d \n",stBindInfo.stSrcChnPort.eModId);
-                // printf("stBindInfo.stSrcChnPort.u32DevId : %d \n",stBindInfo.stSrcChnPort.u32DevId);
-                // printf("stBindInfo.stSrcChnPort.u32ChnId : %d \n",stBindInfo.stSrcChnPort.u32ChnId);
-                // printf("stBindInfo.stSrcChnPort.u32PortId : %d \n",stBindInfo.stSrcChnPort.u32PortId);
-                // printf("stBindInfo.stDstChnPort.eModId : %d \n",stBindInfo.stDstChnPort.eModId);
-                // printf("stBindInfo.stDstChnPort.u32DevId : %d \n",stBindInfo.stDstChnPort.u32DevId);
-                // printf("stBindInfo.stDstChnPort.u32ChnId : %d \n",stBindInfo.stDstChnPort.u32ChnId);
-                // printf("stBindInfo.stDstChnPort.u32PortId : %d \n",stBindInfo.stDstChnPort.u32PortId);
-                // printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
-                // printf("stBindInfo.u32DstFrmrate : %d \n",stBindInfo.u32DstFrmrate);
-                // printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
+                printf("\n\n\n\n >>>>>>>>>>>>>> VENC -> VPE <<<<<<<<<<<<<<<<<<<<<<<<<< \n");
+                printf("stBindInfo.stSrcChnPort.eModId : %d \n",stBindInfo.stSrcChnPort.eModId);
+                printf("stBindInfo.stSrcChnPort.u32DevId : %d \n",stBindInfo.stSrcChnPort.u32DevId);
+                printf("stBindInfo.stSrcChnPort.u32ChnId : %d \n",stBindInfo.stSrcChnPort.u32ChnId);
+                printf("stBindInfo.stSrcChnPort.u32PortId : %d \n",stBindInfo.stSrcChnPort.u32PortId);
+                printf("stBindInfo.stDstChnPort.eModId : %d \n",stBindInfo.stDstChnPort.eModId);
+                printf("stBindInfo.stDstChnPort.u32DevId : %d \n",stBindInfo.stDstChnPort.u32DevId);
+                printf("stBindInfo.stDstChnPort.u32ChnId : %d \n",stBindInfo.stDstChnPort.u32ChnId);
+                printf("stBindInfo.stDstChnPort.u32PortId : %d \n",stBindInfo.stDstChnPort.u32PortId);
+                printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
+                printf("stBindInfo.u32DstFrmrate : %d \n",stBindInfo.u32DstFrmrate);
+                printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
             }
 
             return ret;

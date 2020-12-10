@@ -383,7 +383,7 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
 
             cf_assert(rtsp_server0 != nullptr );
             rtsp_server0->setAttr("port",554);
-            std::string payload = elemVenc0->getAttr("VENC-PAYLOAD","");
+            // std::string payload = elemVenc0->getAttr("VENC-PAYLOAD","");
             rtsp_server0->setAttr("payload","h264");
 
             instance->mElemHead1->link(elemVps); // vif ->vep
