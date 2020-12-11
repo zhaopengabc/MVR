@@ -153,7 +153,7 @@ namespace CXS{
 
 
             MI_SNR_SetPlaneMode(eSnrPadId, FALSE);
-            MI_SNR_SetRes(eSnrPadId,0);//0 1920*1080
+            MI_SNR_SetRes(eSnrPadId,6);//0 1920*1080
             MI_SNR_Enable(eSnrPadId);
             MI_SNR_GetPadInfo(eSnrPadId, &stPad0Info);
             MI_SNR_GetPlaneInfo(eSnrPadId, 0, &stSnrPlane0Info);
@@ -161,7 +161,7 @@ namespace CXS{
             /************************************************
             Step1:  init SYS
             *************************************************/
-            STCHECKRESULT(ST_Sys_Init());
+            // STCHECKRESULT(ST_Sys_Init());
 
             /************************************************
             Step2:  init VIF
