@@ -14,6 +14,11 @@ namespace CXS{
 
     class Vpe : public HiElement
     {
+        typedef struct ty_resolution
+        {
+            MI_U32 width;
+            MI_U32 height;
+        }TY_RESOLUTION;
         struct ST_Stream_Attr_T
         {
             MI_VIF_DEV s32vifDev;
@@ -52,42 +57,44 @@ namespace CXS{
             ST_VPE_PortInfo_T stVpePortInfo;
 
             MI_SYS_PixelFormat_e pixelFormat;
-
-            gVpeAttr[0].s32vifDev = 0;
-            gVpeAttr[0].enInput = ST_Sys_Input_VPE;
-            gVpeAttr[0].u32InputChn = 0;
-            gVpeAttr[0].u32InputPort = 0;
-            gVpeAttr[0].vencChn = 0;
-            gVpeAttr[0].eType = E_MI_VENC_MODTYPE_H264E;
-            gVpeAttr[0].u32Width = 1920;
-            gVpeAttr[0].u32Height = 1080;
-            gVpeAttr[0].eBindSensorId = E_MI_VPE_SENSOR0;
-            gVpeAttr[0].pixelFormat = (MI_SYS_PixelFormat_e)35;
+            MI_VPE_SensorChannel_e eBindSensorId;
+            std::string tmpSensorId;
+            std::string tmpResolution;
+            TY_RESOLUTION maxResolution;
+            TY_RESOLUTION vpeResolution;
 
 
-            gVpeAttr[1].s32vifDev = 2;
-            gVpeAttr[1].enInput =ST_Sys_Input_VPE;
-            gVpeAttr[1].u32InputChn = 2;
-            gVpeAttr[1].u32InputPort = 0;
-            gVpeAttr[1].vencChn = 2;
-            gVpeAttr[1].eType = E_MI_VENC_MODTYPE_H264E;
-            gVpeAttr[1].u32Width = 1280;
-            gVpeAttr[1].u32Height = 720;
-            // gVpeAttr[1].u32Width = 3840;
-            // gVpeAttr[1].u32Height = 2160;
-            gVpeAttr[1].eBindSensorId = E_MI_VPE_SENSOR1;
-            gVpeAttr[1].pixelFormat = (MI_SYS_PixelFormat_e)44;
+            vpechn = atoi(this->getAttr("vpeChn","0").c_str());
+            pixelFormat = (MI_SYS_PixelFormat_e)atoi(this->getAttr("pixelFormat","35").c_str());
+            tmpSensorId =  this->getAttr("sensorId","0");
 
-            for(int i=0;i<MAX_VPE_CHN;i++)
+            tmpResolution = this->getAttr("relolution","FHD");
+            if(tmpResolution == "FHD")
             {
-                vpechn = gVpeAttr[i].s32vifDev;
-                pixelFormat = gVpeAttr[i].pixelFormat;
-                
+                maxResolution.width = 3840;
+                maxResolution.height = 2160;
+                vpeResolution.width = 1920;
+                vpeResolution.height = 1080;
+            }
+            else if(tmpResolution == "HD")
+            {
+                maxResolution.width = 1920;
+                maxResolution.height = 1080;
+                vpeResolution.width = 1280;
+                vpeResolution.height = 720;
+            }
+            
+            if(tmpSensorId == "0")
+            {
+                eBindSensorId = E_MI_VPE_SENSOR0;
+            }
+            else if(tmpSensorId == "1")
+            {
+                eBindSensorId = E_MI_VPE_SENSOR1;
+            }
                 memset(&stVpeChannelInfo, 0, sizeof(ST_VPE_ChannelInfo_T));
-                // stVpeChannelInfo.u16VpeMaxW = 1920;// this data get frome camera ????
-                // stVpeChannelInfo.u16VpeMaxH = 1080;// this data get frome camera ????
-                stVpeChannelInfo.u16VpeMaxW = 3840;// this data get frome camera ????
-                stVpeChannelInfo.u16VpeMaxH = 2160;// this data get frome camera ????
+                stVpeChannelInfo.u16VpeMaxW = maxResolution.width;
+                stVpeChannelInfo.u16VpeMaxH = maxResolution.height;
                 stVpeChannelInfo.u32X = 0;
                 stVpeChannelInfo.u32Y = 0;
                 stVpeChannelInfo.u16VpeCropW = 0;
@@ -95,7 +102,7 @@ namespace CXS{
                 stVpeChannelInfo.eRunningMode = E_MI_VPE_RUN_CAM_MODE;
                 stVpeChannelInfo.eFormat = pixelFormat;
                 stVpeChannelInfo.eHDRtype = E_MI_VPE_HDR_TYPE_OFF;
-                stVpeChannelInfo.eBindSensorId = gVpeAttr[i].eBindSensorId;
+                stVpeChannelInfo.eBindSensorId = eBindSensorId;
 
                 ST_Vpe_CreateChannel(vpechn, &stVpeChannelInfo);
                 ST_Vpe_StartChannel(vpechn);
@@ -103,8 +110,8 @@ namespace CXS{
                  memset(&stVpePortInfo, 0, sizeof(ST_VPE_PortInfo_T));
 
                 stVpePortInfo.DepVpeChannel = vpechn;
-                stVpePortInfo.u16OutputWidth = gVpeAttr[i].u32Width;
-                stVpePortInfo.u16OutputHeight = gVpeAttr[i].u32Height;
+                stVpePortInfo.u16OutputWidth = vpeResolution.width;
+                stVpePortInfo.u16OutputHeight = vpeResolution.height;
                 stVpePortInfo.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
                 stVpePortInfo.eCompressMode = E_MI_SYS_COMPRESS_MODE_NONE;
                 STCHECKRESULT(ST_Vpe_StartPort(0 , &stVpePortInfo));
@@ -121,7 +128,6 @@ namespace CXS{
                 printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
                 printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
                 printf("stVpeChannelInfo.eBindSensorId : %d \n",stVpeChannelInfo.eBindSensorId);
-            }
             return ret;
         }
         int linkTo(Element* elem)
@@ -136,11 +142,8 @@ namespace CXS{
             
             if(strcmp(hiElem->getClassName(),"venc") == 0)
             {
-                for(int i = 0;i<MAX_VPE_CHN;i++)
-                {
-                    vifDev = gVpeAttr[i].s32vifDev;
-                    vpechn = vifDev;
-                    VencChn = gVpeAttr[i].vencChn;
+                    vpechn = atoi(this->getAttr("vpeChn","0").c_str());
+                    VencChn = atoi(this->getAttr("vencChn","0").c_str());
 
                     ExecFunc(MI_VENC_GetChnDevid(VencChn, &u32VencDevId), MI_SUCCESS);
                     memset(&stBindInfo, 0x0, sizeof(ST_Sys_BindInfo_T));
@@ -171,7 +174,6 @@ namespace CXS{
                     printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
                     printf("stBindInfo.u32DstFrmrate : %d \n",stBindInfo.u32DstFrmrate);
                     printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
-                }                
             }
             return ret;
         }

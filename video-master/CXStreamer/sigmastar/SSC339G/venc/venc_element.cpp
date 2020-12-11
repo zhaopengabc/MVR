@@ -29,6 +29,11 @@ namespace CXS{
 
     class VENCSSC339G : public HiElement
     {
+        typedef struct ty_resolution
+        {
+            MI_U32 width;
+            MI_U32 height;
+        }TY_RESOLUTION;
         struct ST_Stream_Attr_T
         {
             MI_VIF_DEV s32vifDev;
@@ -46,20 +51,6 @@ namespace CXS{
         static std::vector<VENCSSC339G*> arr_VENCSSC339G;
         VENCSSC339G():HiElement(ELEMENT_CLASS_NAME)
         {
-            // for(int i =0;i < 32;i++){
-            //     if(arr_VENCSSC339G[i] == nullptr){
-            //         mHandle = i;
-            //         break;
-            //     }
-            // }
-            // arr_VENCSSC339G[mHandle] = this;
-            // setAttr("VENC-CHN",mHandle);
-            // setAttr("VENC-SRC-FRAMERATE",60);
-            // setAttr("VENC-FRAMERATE",15);
-            // setAttr("VENC-MODE","HD1080");
-            // setAttr("VENC-PAYLOAD","h264");
-            setAttr("FIRST_VENC-CHN","0");
-            setAttr("SECOND_VENC-CHN","2");
         }
         struct ST_Stream_Attr_T gVencAttr[MAX_VPE_CHN];
 
@@ -95,14 +86,7 @@ namespace CXS{
             elem = (VENCSSC339G*)para;
             for(int i = 0;i<MAX_VPE_CHN;i++)
             {
-                VencChn = elem->gVencAttr[i].vencChn;
-                // s32Ret = MI_VENC_GetChnDevid(VencChn, &u32DevId);
-                // if(MI_SUCCESS != s32Ret)
-                // {
-                //     ST_INFO("MI_VENC_GetChnDevid %d error, %X\n", VencChn, s32Ret);
-                // }
-                printf("\n\n\n\n ======= get stream data ==========\n");
-                printf("VencChn : %d\n",VencChn);
+                VencChn = atoi(elem->getAttr("vencChn","0").c_str());
                 while(getH264flag)
                 {
                     memset(&stBufInfo, 0x0, sizeof(MI_SYS_BufInfo_t));
@@ -148,49 +132,57 @@ namespace CXS{
         int startSelf(){
             int ret = 0;
             MI_VENC_CHN VencChn;
-
-            gVencAttr[0].s32vifDev = 0;
-            gVencAttr[0].enInput = ST_Sys_Input_VPE;
-            gVencAttr[0].u32InputChn = 0;
-            gVencAttr[0].u32InputPort = 0;
-            gVencAttr[0].vencChn = 0;
-            gVencAttr[0].eType = E_MI_VENC_MODTYPE_H264E;
-            // gVencAttr[0].u32Width = 1920;
-            // gVencAttr[0].u32Height = 1080;
-            gVencAttr[0].u32Width = 3840;
-            gVencAttr[0].u32Height = 2160;
-            gVencAttr[0].eBindSensorId = E_MI_VPE_SENSOR0;
-            gVencAttr[0].pixelFormat = (MI_SYS_PixelFormat_e)35;
-
-            gVencAttr[1].s32vifDev = 2;
-            gVencAttr[1].enInput =ST_Sys_Input_VPE;
-            gVencAttr[1].u32InputChn = 2;
-            gVencAttr[1].u32InputPort = 0;
-            gVencAttr[1].vencChn = 2;
-            gVencAttr[1].eType = E_MI_VENC_MODTYPE_H264E;
-            gVencAttr[1].u32Width = 1280;
-            gVencAttr[1].u32Height = 720;
-
-
             MI_U32 u32VencDevId = 0xff;
             /************************************************
             Step4:  init VENC
             *************************************************/
             MI_VENC_ChnAttr_t stChnAttr;
-            for(int i = 0;i<MAX_VPE_CHN;i++)
-            {   
-                VencChn = gVencAttr[i].vencChn;
+            std::string tmpResolution;
+            TY_RESOLUTION maxResolution;
+            TY_RESOLUTION vpeResolution;
 
+            std::string compressionType;
+            MI_VENC_RcMode_e eRcMode;
+            MI_VENC_ModType_e eType;
+
+            VencChn = atoi(this->getAttr("vencChn","0").c_str());
+            tmpResolution = this->getAttr("relolution","FHD");
+            if(tmpResolution == "FHD")
+            {
+                maxResolution.width = 3840;
+                maxResolution.height = 2160;
+                vpeResolution.width = 1920;
+                vpeResolution.height = 1080;
+            }
+            else if(tmpResolution == "HD")
+            {
+                maxResolution.width = 1920;
+                maxResolution.height = 1080;
+                vpeResolution.width = 1280;
+                vpeResolution.height = 720;
+            }
+            compressionType = this->getAttr("compressionType","H264");
+            if(compressionType == "H264")
+            {
+                eRcMode = E_MI_VENC_RC_MODE_H264CBR;
+                eType = E_MI_VENC_MODTYPE_H264E;
+            }
+            else if(compressionType == "H265")
+            {
+                eRcMode = E_MI_VENC_RC_MODE_H265CBR;
+                eType = E_MI_VENC_MODTYPE_H265E;
+            }
+            
                 memset(&stChnAttr, 0x0, sizeof(MI_VENC_ChnAttr_t));
                 MI_S32 u32VenBitRate = 1024 * 1024 * 2;
-                stChnAttr.stVeAttr.stAttrH264e.u32PicWidth = gVencAttr[i].u32Width;
-                stChnAttr.stVeAttr.stAttrH264e.u32PicHeight = gVencAttr[i].u32Height;
-                stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth = gVencAttr[i].u32Width;
-                stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight = gVencAttr[i].u32Height;
+                stChnAttr.stVeAttr.stAttrH264e.u32PicWidth = vpeResolution.width;
+                stChnAttr.stVeAttr.stAttrH264e.u32PicHeight = vpeResolution.height;
+                stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth = maxResolution.width;
+                stChnAttr.stVeAttr.stAttrH264e.u32MaxPicHeight =  maxResolution.height;
                 stChnAttr.stVeAttr.stAttrH264e.u32BFrameNum = 2;
                 stChnAttr.stVeAttr.stAttrH264e.bByFrame = TRUE;
 
-                stChnAttr.stRcAttr.eRcMode = E_MI_VENC_RC_MODE_H264CBR;
+                stChnAttr.stRcAttr.eRcMode = eRcMode;
                 stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate = u32VenBitRate;
                 stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel = 0;
                 stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop = 30;
@@ -198,7 +190,7 @@ namespace CXS{
                 stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen = 1;
                 stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime = 0;
             
-                stChnAttr.stVeAttr.eType = gVencAttr[i].eType;
+                stChnAttr.stVeAttr.eType = eType;
 
                 STCHECKRESULT(ST_Venc_CreateChannel(VencChn, &stChnAttr));
                 STCHECKRESULT(ST_Venc_StartChannel(VencChn));
@@ -218,7 +210,6 @@ namespace CXS{
                 printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen);
                 printf("stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime : %d \n",stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime);
                 printf("stChnAttr.stVeAttr.eType : %d \n",stChnAttr.stVeAttr.eType);
-            }
             pthread_create(&pthreadId,NULL,getH264data,(void *)this);
 
             return 0;

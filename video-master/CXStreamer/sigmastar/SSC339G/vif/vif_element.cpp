@@ -291,15 +291,80 @@ namespace CXS{
         }
         int startSelf()
         {
-            int ret = 0;
+            int s32Ret = 0;
+            MI_SNR_PADInfo_t  stPad0Info;
+            MI_SNR_PlaneInfo_t stSnrPlane0Info;
+            MI_VIF_DEV vifDev = atoi(this->getAttr("vifDev","0").c_str());
+            MI_VIF_CHN vifChn = vifDev*4;
+            MI_VPE_CHANNEL vpechn = vifDev;
+            // std::string padId;
+            MI_SNR_PAD_ID_e eSnrPadId = (MI_SNR_PAD_ID_e)atoi(this->getAttr("eSnrPad","0").c_str());
 
-            ret = StartVif();
-            if(ret == 0)
+            // padId = this->getAttr("eSnrPad","0");
+            // if(padId == "0")
+            // {
+            //     eSnrPadId = E_MI_SNR_PAD_ID_0;
+            // }
+            // else if(padId == "1")
+            // {
+            //     eSnrPadId = E_MI_SNR_PAD_ID_1;
+            // }
+
+            memset(&stPad0Info, 0x0, sizeof(MI_SNR_PADInfo_t));
+            MI_SNR_SetPlaneMode(eSnrPadId, FALSE);
+            MI_SNR_SetRes(eSnrPadId,0);
+            MI_SNR_Enable(eSnrPadId);
+            MI_SNR_GetPadInfo(eSnrPadId, &stPad0Info);
+            MI_SNR_GetPlaneInfo(eSnrPadId, 0, &stSnrPlane0Info);  
+
+            MI_VIF_DevAttr_t stDevAttr;
+            memset(&stDevAttr, 0x0, sizeof(MI_VIF_DevAttr_t));
+            stDevAttr.eIntfMode = stPad0Info.eIntfMode;
+            stDevAttr.eWorkMode = E_MI_VIF_WORK_MODE_RGB_FRAMEMODE;
+            stDevAttr.eHDRType = E_MI_VIF_HDR_TYPE_OFF;
+            if(stDevAttr.eIntfMode == E_MI_VIF_MODE_MIPI)
             {
-                // pthread_create(&mFrameThread,NULL,frameThread,(void*)new UserData(mHandle,this));
-            }   
+                stDevAttr.eDataSeq =stPad0Info.unIntfAttr.stMipiAttr.eDataYUVOrder;
+            }
+            else
+            {
+                stDevAttr.eDataSeq = E_MI_VIF_INPUT_DATA_YUYV;
+            }
+
+            stDevAttr.eBitOrder = E_MI_VIF_BITORDER_NORMAL; 
             
-            return ret;
+            MI_VIF_SetDevAttr(vifDev, &stDevAttr);
+            MI_VIF_EnableDev(vifDev);
+
+
+            MI_U32 u32InputPort = atoi(this->getAttr("u32InputPort","0").c_str());
+            MI_U32 u32CapWidth = 0, u32CapHeight = 0;
+            MI_VIF_FrameRate_e eFrameRate;
+            MI_SYS_PixelFormat_e ePixFormat;
+
+
+            u32CapWidth = stSnrPlane0Info.stCapRect.u16Width;
+            u32CapHeight = stSnrPlane0Info.stCapRect.u16Height;
+            eFrameRate = E_MI_VIF_FRAMERATE_FULL;
+            ePixFormat = (MI_SYS_PixelFormat_e)RGB_BAYER_PIXEL(stSnrPlane0Info.ePixPrecision, stSnrPlane0Info.eBayerId);
+
+            ST_VIF_PortInfo_T stVifPortInfoInfo;
+            memset(&stVifPortInfoInfo, 0, sizeof(ST_VIF_PortInfo_T));
+            stVifPortInfoInfo.u32RectX = stSnrPlane0Info.stCapRect.u16X;
+            stVifPortInfoInfo.u32RectY = stSnrPlane0Info.stCapRect.u16Y;
+            stVifPortInfoInfo.u32RectWidth = u32CapWidth;
+            stVifPortInfoInfo.u32RectHeight = u32CapHeight;
+            stVifPortInfoInfo.u32DestWidth = u32CapWidth;
+            stVifPortInfoInfo.u32DestHeight = u32CapHeight;
+            stVifPortInfoInfo.eFrameRate = eFrameRate;
+            stVifPortInfoInfo.ePixFormat = ePixFormat;//E_MI_SYS_PIXEL_FRAME_RGB_BAYER_12BPP_GR;
+            ST_Vif_CreatePort(vifChn, u32InputPort, &stVifPortInfoInfo);
+            ST_Vif_StartPort(0, vifChn, u32InputPort);
+
+            MI_ModuleId_e eVifModeId = E_MI_MODULE_ID_VIF;
+            MI_U8 u8MmaHeap[128] = "mma_heap_name0";
+            s32Ret = MI_SYS_SetChnMMAConf(eVifModeId, 0, vifChn, u8MmaHeap);
+            return s32Ret;
         }
         int linkTo(Element* elem)
         {
@@ -311,14 +376,12 @@ namespace CXS{
             ST_Sys_BindInfo_T stBindInfo;
 
             HiElement* hiElem = dynamic_cast<HiElement*>(elem);
-            for(i = 0; i < MAX_DECODE_CH;i++)
-            {
-                vifDev = g_stStreamAttr[i].s32vifDev;
-                vifChn = vifDev * 4;
-                vpechn = vifDev;
+            vifDev = atoi(this->getAttr("vifDev","0").c_str());
+            vifChn = vifDev*4;
+            vpechn = vifDev;
 
-                if(strcmp(hiElem->getClassName(),"vpe") == 0)
-                {
+            if(strcmp(hiElem->getClassName(),"vpe") == 0)
+            {
                     /************************************************
                     Step1:  bind VIF->VPE
                     *************************************************/
@@ -337,8 +400,7 @@ namespace CXS{
                     stBindInfo.u32DstFrmrate = 30;
                     stBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
                     STCHECKRESULT(ST_Sys_Bind(&stBindInfo));
-                }
-            }   
+            }
             return ret;
         }
     };
