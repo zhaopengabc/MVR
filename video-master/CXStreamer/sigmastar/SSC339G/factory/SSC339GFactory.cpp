@@ -59,7 +59,9 @@ namespace CXS{
     };
     static int init()
     {
+        printf("factory init ....... \n");
         // STCHECKRESULT(ST_Sys_Init());
+
         return 0;
         // return 0 == s32Ret ? 0:-1;
     }
