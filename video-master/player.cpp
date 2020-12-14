@@ -407,30 +407,42 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             elemVenc0->setAttr("compressionType","H264");
             elemVenc0->link(rtsp_server0); //venc -> rtsp
 
-            instance->mElemHead2 =  factory->createElementByName("vif");
-            elemVpe1 = factory->createElementByName("vpe");
-            elemVenc1 =  factory->createElementByName("venc");
-            rtsp_server1 = factory_common->createElementByName("rtsp-server");
-            rtsp_server1->setAttr("port",555);
-            rtsp_server1->setAttr("payload","h264");
+            ws_server0 = factory_common->createElementByName("ws-server");
+            cf_assert(ws_server0 != nullptr );
+            ws_server0->setAttr("port",port1);
+            elemVenc0->link(ws_server0);
 
 
-            instance->mElemHead2->setAttr("eSnrPad","1");
-            instance->mElemHead2->setAttr("vifDev","2");
-            instance->mElemHead2->setAttr("u32InputPort","0");
-            instance->mElemHead2->link(elemVpe1); // vif ->vep
 
-            elemVpe1->setAttr("vpeChn","2");
-            elemVpe1->setAttr("vencChn","2");
-            elemVpe1->setAttr("pixelFormat","44");
-            elemVpe1->setAttr("sensorId","1");
-            elemVpe1->setAttr("resolution","HD");
-            elemVpe1->link(elemVenc1); //vep -> venc
 
-            elemVenc1->setAttr("vencChn","2");
-            elemVenc1->setAttr("resolution","HD");
-            elemVenc1->setAttr("compressionType","H264");
-            elemVenc1->link(rtsp_server1); //venc -> rtsp
+            // instance->mElemHead2 =  factory->createElementByName("vif");
+            // elemVpe1 = factory->createElementByName("vpe");
+            // elemVenc1 =  factory->createElementByName("venc");
+            // rtsp_server1 = factory_common->createElementByName("rtsp-server");
+            // rtsp_server1->setAttr("port",555);
+            // rtsp_server1->setAttr("payload","h264");
+
+
+            // instance->mElemHead2->setAttr("eSnrPad","1");
+            // instance->mElemHead2->setAttr("vifDev","2");
+            // instance->mElemHead2->setAttr("u32InputPort","0");
+            // instance->mElemHead2->link(elemVpe1); // vif ->vep
+
+            // elemVpe1->setAttr("vpeChn","2");
+            // elemVpe1->setAttr("vencChn","2");
+            // elemVpe1->setAttr("pixelFormat","44");
+            // elemVpe1->setAttr("sensorId","1");
+            // elemVpe1->setAttr("resolution","HD");
+            // elemVpe1->link(elemVenc1); //vep -> venc
+
+            // elemVenc1->setAttr("vencChn","2");
+            // elemVenc1->setAttr("resolution","HD");
+            // elemVenc1->setAttr("compressionType","H264");
+            // elemVenc1->link(rtsp_server1); //venc -> rtsp
+            // ws_server1 = factory_common->createElementByName("ws-server");
+            // cf_assert(ws_server0 != nullptr );
+            // ws_server1->setAttr("port",port1);
+            // elemVenc1->link(ws_server1);
 
             // elemVenc0->pushData(&dstFrame);
             /*

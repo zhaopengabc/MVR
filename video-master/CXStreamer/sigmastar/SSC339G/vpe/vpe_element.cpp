@@ -6,6 +6,8 @@
 #include "st_vif.h"
 #include "st_vpe.h"
 #include "st_venc.h"
+#include <sys/time.h>
+
 
 
 namespace CXS{
@@ -128,6 +130,13 @@ namespace CXS{
                 printf("stVpeChannelInfo.eFormat : %d \n",stVpeChannelInfo.eFormat);
                 printf("stVpeChannelInfo.eHDRtype : %d \n",stVpeChannelInfo.eHDRtype);
                 printf("stVpeChannelInfo.eBindSensorId : %d \n",stVpeChannelInfo.eBindSensorId);
+
+                printf("stVpePortInfo.DepVpeChannel : %d \n",stVpePortInfo.DepVpeChannel);
+                printf("stVpePortInfo.u16OutputWidth : %d \n",stVpePortInfo.u16OutputWidth);
+                printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
+                printf("stVpePortInfo.ePixelFormat : %d \n",stVpePortInfo.ePixelFormat);
+                printf("stVpePortInfo.eCompressMod : %d \n",stVpePortInfo.eCompressMode);
+
             return ret;
         }
         int linkTo(Element* elem)
@@ -140,12 +149,13 @@ namespace CXS{
             MI_VPE_CHANNEL vpechn;
             MI_VENC_CHN VencChn;
             
+
             if(strcmp(hiElem->getClassName(),"venc") == 0)
             {
+                    vifDev = atoi(this->getAttr("vifDev","0").c_str());
                     vpechn = atoi(this->getAttr("vpeChn","0").c_str());
-                    VencChn = atoi(this->getAttr("vencChn","0").c_str());
-
-                    ExecFunc(MI_VENC_GetChnDevid(VencChn, &u32VencDevId), MI_SUCCESS);
+                    VencChn = atoi(this->getAttr("vencChn","0").c_str());                    
+                    /*
                     memset(&stBindInfo, 0x0, sizeof(ST_Sys_BindInfo_T));
                     stBindInfo.stSrcChnPort.eModId = E_MI_MODULE_ID_VPE;
                     stBindInfo.stSrcChnPort.u32DevId = 0;
@@ -174,6 +184,7 @@ namespace CXS{
                     printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
                     printf("stBindInfo.u32DstFrmrate : %d \n",stBindInfo.u32DstFrmrate);
                     printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
+                    */
             }
             return ret;
         }
