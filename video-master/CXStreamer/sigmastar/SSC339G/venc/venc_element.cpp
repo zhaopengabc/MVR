@@ -106,7 +106,7 @@ namespace CXS{
                     {
                         len = stStream.pstPack[0].u32Len;
                         data = (uint8_t* )malloc(len);
-                        printf("len : %d \n\n\n\n\n\n\n",len);
+                        // printf("len : %d \n\n\n\n\n\n\n",len);
                         memcpy(data, stStream.pstPack[0].pu8Addr, len);
 
                         struct Buffer buf = {data,(size_t)len};
@@ -149,8 +149,8 @@ namespace CXS{
             tmpResolution = this->getAttr("relolution","FHD");
             if(tmpResolution == "FHD")
             {
-                maxResolution.width = 1920;
-                maxResolution.height = 1080;
+                maxResolution.width = 3840;
+                maxResolution.height = 2160;
                 vpeResolution.width = 1920;
                 vpeResolution.height = 1080;
             }

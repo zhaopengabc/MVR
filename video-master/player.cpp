@@ -29,7 +29,32 @@ static CXS::Element* ws_server1 = NULL;
 
 static CXS::Element* elemVenc1 = NULL;
 static CXS::Element* elemVpe1 = NULL;
-
+static std::string to_String(int n)
+{
+    int m = n;
+    char s[100];
+    char ss[100];
+    int i=0,j=0;
+    if (n < 0)// 处理负数
+    {
+        m = 0 - m;
+        j = 1;
+         ss[0] = '-';
+    }    
+    while (m>0)
+    {
+        s[i++] = m % 10 + '0';
+        m /= 10;
+    }
+    s[i] = '\0';
+    i = i - 1;
+    while (i >= 0)
+    {
+        ss[j++] = s[i--];
+    }    
+    ss[j] = '\0';    
+    return ss;
+}
 static void ws_cli_max_pending_changed_handler(void* user_data,void* event_para){
     CXS::Element* elem = static_cast<CXS::Element*>(user_data);
     int max_pendings =  reinterpret_cast<int>(event_para);
@@ -167,10 +192,12 @@ static void read_layout_conf(){
                 int row = source.get<int>("rowNo",-1);
                 int col = source.get<int>("colNo",-1);
                 int inputId = source.get<int>("inputId",-1);
-                if(row != -1 && col != -1 && inputId != -1){
+                if(row != -1 && col != -1 && inputId != -1)
+                {
                     layer_layout_tab[row*dst_horizontal_blks+col] = inputId;
                 }
-                else{
+                else
+                {
                 }
             }
         }
@@ -393,6 +420,35 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             instance->mElemHead1->setAttr("eSnrPad","0");
             instance->mElemHead1->setAttr("vifDev","0");
             instance->mElemHead1->setAttr("u32InputPort","0");
+            instance->mElemHead1->setAttr("vencChn","0");
+            instance->mElemHead1->setAttr("resolution","FHD");
+            dst_horizontal_blks = 8;
+            dst_vertical_blks = 8;
+            std::string horizontal = to_String(dst_horizontal_blks);
+            instance->mElemHead1->setAttr("dst_horizontal_blks",horizontal);
+            std::string vertical = to_String(dst_vertical_blks);
+            instance->mElemHead1->setAttr("dst_vertical_blks",vertical);
+            // std::string layNum = to_String(i+1);
+
+            instance->mElemHead1->setAttr("layNum","64");
+
+            for(int i = 0;i<MAX_LAYER_NUMS;i++)
+            {
+                layer_layout_tab[i] = 64 - i;
+                if(layer_layout_tab[i] != -1)
+                {
+                    std::string tabId = "tabId";
+                    std::string layer_tab = to_String(layer_layout_tab[i]);
+                    std::string tab = tabId + to_String(i);
+                    instance->mElemHead1->setAttr(tab.c_str(),layer_tab);
+                }
+                else
+                {
+                    std::string layNum = to_String(i+1);
+
+                    break;
+                }
+            }
             instance->mElemHead1->link(elemVps); // vif ->vep
 
             elemVps->setAttr("vpeChn","0");
@@ -412,20 +468,19 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             ws_server0->setAttr("port",port1);
             elemVenc0->link(ws_server0);
 
-
-
-
-            // instance->mElemHead2 =  factory->createElementByName("vif");
-            // elemVpe1 = factory->createElementByName("vpe");
-            // elemVenc1 =  factory->createElementByName("venc");
-            // rtsp_server1 = factory_common->createElementByName("rtsp-server");
-            // rtsp_server1->setAttr("port",555);
-            // rtsp_server1->setAttr("payload","h264");
+            instance->mElemHead2 =  factory->createElementByName("vif");
+            elemVpe1 = factory->createElementByName("vpe");
+            elemVenc1 =  factory->createElementByName("venc");
+            rtsp_server1 = factory_common->createElementByName("rtsp-server");
+            rtsp_server1->setAttr("port",555);
+            rtsp_server1->setAttr("payload","h264");
 
 
             // instance->mElemHead2->setAttr("eSnrPad","1");
             // instance->mElemHead2->setAttr("vifDev","2");
             // instance->mElemHead2->setAttr("u32InputPort","0");
+            // instance->mElemHead2->setAttr("vencChn","2");
+            // instance->mElemHead2->setAttr("resolution","HD");
             // instance->mElemHead2->link(elemVpe1); // vif ->vep
 
             // elemVpe1->setAttr("vpeChn","2");

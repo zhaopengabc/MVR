@@ -44,6 +44,7 @@ namespace CXS{
     #define ELEMENT_CLASS_NAME  "vif"
     #define MAX_FRAME_NUM 8
     #define MAX_DECODE_CH 1
+    #define MAX_LAYER_NUMS 128
     typedef struct resolution
     {
         int width;
@@ -240,9 +241,50 @@ namespace CXS{
                 mViElem = viElem;
             }
         }UserData;
-
+        typedef struct webPara
+        {
+            int dst_horizontal_blks;
+            int dst_vertical_blks;
+            int layer_layout_tab[MAX_LAYER_NUMS];
+        }TY_WEB_PARA;
 
     private:
+
+    static int reorganizeYUV(MI_SYS_FrameData_t *inFrameData,MI_SYS_FrameData_t *outFrameData,TY_WEB_PARA *webPara)
+    {
+        int layerId = -1;
+        int vi_w = 1920;
+        int vi_h = 1080;
+        int blk_w = vi_w / webPara->dst_horizontal_blks;
+        int blk_h = vi_h / webPara->dst_vertical_blks;
+        for(int i = 0; i < webPara->dst_horizontal_blks*webPara->dst_vertical_blks;i++)
+        {
+            layerId = webPara->layer_layout_tab[i];
+            if(layerId != -1 )
+            {
+                uint8_t* src_y = (uint8_t*)inFrameData->pVirAddr[0] + layerId /  webPara->dst_horizontal_blks * blk_h * vi_w  +layerId % webPara->dst_horizontal_blks * blk_w;
+                uint8_t* dst_y = (uint8_t*)outFrameData->pVirAddr[0] + i / webPara->dst_horizontal_blks*blk_h* vi_w + i % webPara->dst_horizontal_blks*blk_w;
+                uint8_t* src_uv = (uint8_t*)inFrameData->pVirAddr[1] + layerId / webPara->dst_horizontal_blks * blk_h / 2 * vi_w +layerId % webPara->dst_horizontal_blks * blk_w;
+                uint8_t* dst_uv = (uint8_t*)outFrameData->pVirAddr[1] + i / webPara->dst_horizontal_blks * blk_h / 2 * vi_w + i % webPara->dst_horizontal_blks * blk_w;
+
+                for(int y = 0; y < blk_h;y++)
+                {
+                    memcpy(dst_y,src_y,blk_w);
+                    memcpy(dst_uv,src_uv,blk_w);
+                    src_y += vi_w;
+                    dst_y += vi_w;
+                    if( y % 2 == 1)
+                    {
+                        src_uv += vi_w;
+                        dst_uv += vi_w;
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
     //     static void* frameThread(void* data)
     //     {
     //         UserData* ud = (UserData*)data;
@@ -385,6 +427,8 @@ namespace CXS{
             MI_VIF_DEV vifDev = 0;
             MI_VIF_CHN vifChn = 0;
             MI_VPE_CHANNEL vpechn = 0; 
+            MI_VENC_CHN vencChn = 0;
+            MI_U32 u32VencDevId = 0;
             ST_Sys_BindInfo_T stBindInfo;
             fd_set read_fds;
             MI_S32 s32Fd = 0;
@@ -399,14 +443,26 @@ namespace CXS{
             struct timeval stTv;
             MI_SYS_ChnPort_t stVencChnInput;
             int size = 0;
+            std::string tmpResolution;
+            TY_RESOLUTION vencResolution;
 
 
-            // memset();
-
+            tmpResolution = this->getAttr("relolution","FHD");
+            if(tmpResolution == "FHD")
+            {
+                vencResolution.width = 1920;
+                vencResolution.height = 1080;
+            }
+            else if(tmpResolution == "HD")
+            {
+                vencResolution.width = 1280;
+                vencResolution.height = 720;
+            }       
             HiElement* hiElem = dynamic_cast<HiElement*>(elem);
             vifDev = atoi(this->getAttr("vifDev","0").c_str());
             vifChn = vifDev*4;
             vpechn = vifDev;
+            vencChn = atoi(this->getAttr("vencChn","0").c_str());
 
             if(strcmp(hiElem->getClassName(),"vpe") == 0)
             {
@@ -447,8 +503,8 @@ namespace CXS{
 
             memset(&stChnPort, 0x0, sizeof(MI_SYS_ChnPort_t));
             stChnPort.eModId = E_MI_MODULE_ID_VPE;
-            stChnPort.u32DevId = 0;
-            stChnPort.u32ChnId = 0;
+            stChnPort.u32DevId = vifDev;
+            stChnPort.u32ChnId = vpechn;
             stChnPort.u32PortId = 0;
 
             ret = MI_SYS_SetChnOutputPortDepth(&stChnPort, 2, 3); 
@@ -464,11 +520,11 @@ namespace CXS{
                 ST_ERR("MI_SYS_GetFd 0, error, %X\n", ret);
                 return 1; 
             }
-            // MI_VENC_GetChnDevid(VencChn, &u32VencDevId);
+            MI_VENC_GetChnDevid(vencChn, &u32VencDevId);
             memset(&stVencChnInput,0,sizeof(MI_SYS_ChnPort_t));
             stVencChnInput.eModId = E_MI_MODULE_ID_VENC;
-            stVencChnInput.u32DevId = 0;
-            stVencChnInput.u32ChnId = 0;
+            stVencChnInput.u32DevId = u32VencDevId;
+            stVencChnInput.u32ChnId = vencChn;
             stVencChnInput.u32PortId = 0;
                    
             while(1)
@@ -507,14 +563,34 @@ namespace CXS{
                             stVencBufConf.u64TargetPts = stTv.tv_sec*1000000 + stTv.tv_usec;
                             stVencBufConf.stFrameCfg.eFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
                             stVencBufConf.stFrameCfg.eFrameScanMode = E_MI_SYS_FRAME_SCAN_MODE_PROGRESSIVE; 
-                            stVencBufConf.stFrameCfg.u16Width = 1920;
-                            stVencBufConf.stFrameCfg.u16Height = 1080;
+                            stVencBufConf.stFrameCfg.u16Width = vencResolution.width;
+                            stVencBufConf.stFrameCfg.u16Height = vencResolution.height;
                             size = stBufInfo.stFrameData.u32BufSize;
                             
                             ret = MI_SYS_ChnInputPortGetBuf(&stVencChnInput,&stVencBufConf,&stVencBufInfo,&hVencHandle,0);
                             if(ret == 0)
                             {
-                                memcpy(stVencBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.pVirAddr[0],size);
+                                // memcpy(stVencBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.pVirAddr[0],1920*1080);
+                                // memcpy(stVencBufInfo.stFrameData.pVirAddr[1],stBufInfo.stFrameData.pVirAddr[1],1920*1080/2);
+
+                                TY_WEB_PARA webPara;
+                                int layNum;
+                                int i = 0;
+                                memset(&webPara,0,sizeof(TY_WEB_PARA));
+                                webPara.dst_horizontal_blks = atoi(this->getAttr("dst_horizontal_blks","0").c_str());
+                                webPara.dst_vertical_blks = atoi(this->getAttr("dst_vertical_blks","0").c_str());
+                                layNum = atoi(this->getAttr("layNum","0").c_str());
+
+                                // // memset(&(webPara->layer_layout_tab),-1,MAX_LAYER_NUMS);
+                                for(int i = 0;i<layNum;i++)
+                                {
+                                    std::string tabId = "tabId";
+                                    std::string tab = tabId + to_String(i);
+                                    webPara.layer_layout_tab[i] = atoi(this->getAttr(tab.c_str(),"0").c_str());
+                                    // printf("webPara->layer_layout_tab[%d] : %d \n",i,webPara.layer_layout_tab[i]);
+                                }
+
+                                reorganizeYUV(&(stBufInfo.stFrameData),&(stVencBufInfo.stFrameData),&webPara);
                             }
                             MI_SYS_ChnInputPortPutBuf(hVencHandle,&stVencBufInfo,FALSE);
                             MI_SYS_ChnOutputPortPutBuf(hHandle);  
