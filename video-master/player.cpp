@@ -406,6 +406,7 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
         instance = new Player;
 
         if(1 && chn1 >= 0){
+            
             instance->mElemHead1 =  factory->createElementByName("vif");
             elemVps = factory->createElementByName("vpe");
             elemVenc0 =  factory->createElementByName("venc");
@@ -422,19 +423,20 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             instance->mElemHead1->setAttr("u32InputPort","0");
             instance->mElemHead1->setAttr("vencChn","0");
             instance->mElemHead1->setAttr("resolution","FHD");
+            instance->mElemHead1->setAttr("mode","regroup");
+
             dst_horizontal_blks = 8;
             dst_vertical_blks = 8;
             std::string horizontal = to_String(dst_horizontal_blks);
             instance->mElemHead1->setAttr("dst_horizontal_blks",horizontal);
             std::string vertical = to_String(dst_vertical_blks);
             instance->mElemHead1->setAttr("dst_vertical_blks",vertical);
-            // std::string layNum = to_String(i+1);
 
             instance->mElemHead1->setAttr("layNum","64");
 
             for(int i = 0;i<MAX_LAYER_NUMS;i++)
             {
-                layer_layout_tab[i] = 64 - i;
+                layer_layout_tab[i] = 63 - i;
                 if(layer_layout_tab[i] != -1)
                 {
                     std::string tabId = "tabId";
@@ -463,12 +465,15 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             elemVenc0->setAttr("compressionType","H264");
             elemVenc0->link(rtsp_server0); //venc -> rtsp
 
-            ws_server0 = factory_common->createElementByName("ws-server");
-            cf_assert(ws_server0 != nullptr );
-            ws_server0->setAttr("port",port1);
-            elemVenc0->link(ws_server0);
+            // ws_server0 = factory_common->createElementByName("ws-server");
+            // cf_assert(ws_server0 != nullptr );
+            // ws_server0->setAttr("port",port1);
+            // elemVenc0->link(ws_server0);
 
             instance->mElemHead2 =  factory->createElementByName("vif");
+
+            printf("\\n\n\n\n\n\n===+++++++++++++++++++++++ \n\n\n\n\n\n\n");
+
             elemVpe1 = factory->createElementByName("vpe");
             elemVenc1 =  factory->createElementByName("venc");
             rtsp_server1 = factory_common->createElementByName("rtsp-server");
@@ -476,24 +481,27 @@ Player* Player::getInstance(int chn1,int chn2,uint16_t port1,uint16_t port2,uint
             rtsp_server1->setAttr("payload","h264");
 
 
-            // instance->mElemHead2->setAttr("eSnrPad","1");
-            // instance->mElemHead2->setAttr("vifDev","2");
-            // instance->mElemHead2->setAttr("u32InputPort","0");
-            // instance->mElemHead2->setAttr("vencChn","2");
-            // instance->mElemHead2->setAttr("resolution","HD");
-            // instance->mElemHead2->link(elemVpe1); // vif ->vep
+            instance->mElemHead2->setAttr("eSnrPad","1");
+            instance->mElemHead2->setAttr("vifDev","2");
+            instance->mElemHead2->setAttr("u32InputPort","0");
+            instance->mElemHead2->setAttr("vencChn","2");
+            instance->mElemHead2->setAttr("resolution","HD");
+            instance->mElemHead2->link(elemVpe1); // vif ->vep
 
-            // elemVpe1->setAttr("vpeChn","2");
-            // elemVpe1->setAttr("vencChn","2");
-            // elemVpe1->setAttr("pixelFormat","44");
-            // elemVpe1->setAttr("sensorId","1");
-            // elemVpe1->setAttr("resolution","HD");
-            // elemVpe1->link(elemVenc1); //vep -> venc
+            elemVpe1->setAttr("vpeChn","2");
+            elemVpe1->setAttr("vencChn","2");
+            elemVpe1->setAttr("pixelFormat","44");
+            elemVpe1->setAttr("sensorId","1");
+            elemVpe1->setAttr("resolution","HD");
+            elemVpe1->setAttr("ReGropMode","No-Regroup");
 
-            // elemVenc1->setAttr("vencChn","2");
-            // elemVenc1->setAttr("resolution","HD");
-            // elemVenc1->setAttr("compressionType","H264");
-            // elemVenc1->link(rtsp_server1); //venc -> rtsp
+            elemVpe1->link(elemVenc1); //vep -> venc
+
+            elemVenc1->setAttr("vencChn","2");
+            elemVenc1->setAttr("resolution","HD");
+            elemVenc1->setAttr("compressionType","H264");
+            elemVenc1->link(rtsp_server1); //venc -> rtsp
+            
             // ws_server1 = factory_common->createElementByName("ws-server");
             // cf_assert(ws_server0 != nullptr );
             // ws_server1->setAttr("port",port1);
@@ -622,10 +630,11 @@ int Player::start()
     int res = 0;
     // if(elemVenc0 )
     //     elemVenc0->start();
+    if(mElemHead2)
+        res = mElemHead2->start();
     if(mElemHead1)
         res = mElemHead1->start();
     // if(res == 0 && mElemHead2 && mElemHead1 != mElemHead2)
-    if(mElemHead2)
-        res = mElemHead2->start();
+
     return res;
 }

@@ -147,6 +147,7 @@ namespace CXS{
 
             VencChn = atoi(this->getAttr("vencChn","0").c_str());
             tmpResolution = this->getAttr("relolution","FHD");
+
             if(tmpResolution == "FHD")
             {
                 maxResolution.width = 3840;

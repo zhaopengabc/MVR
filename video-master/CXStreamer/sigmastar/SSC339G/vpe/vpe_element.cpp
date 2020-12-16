@@ -152,10 +152,16 @@ namespace CXS{
 
             if(strcmp(hiElem->getClassName(),"venc") == 0)
             {
-                    vifDev = atoi(this->getAttr("vifDev","0").c_str());
-                    vpechn = atoi(this->getAttr("vpeChn","0").c_str());
-                    VencChn = atoi(this->getAttr("vencChn","0").c_str());                    
-                    /*
+                vifDev = atoi(this->getAttr("vifDev","0").c_str());
+                vpechn = atoi(this->getAttr("vpeChn","0").c_str());
+                VencChn = atoi(this->getAttr("vencChn","0").c_str());  
+                std::string mode = this->getAttr("ReGropMode","0");     
+
+                MI_VENC_GetChnDevid(VencChn, &u32VencDevId);
+
+                printf("mode : %s \n",mode.c_str());
+                if(mode == "No-Regroup")
+                {
                     memset(&stBindInfo, 0x0, sizeof(ST_Sys_BindInfo_T));
                     stBindInfo.stSrcChnPort.eModId = E_MI_MODULE_ID_VPE;
                     stBindInfo.stSrcChnPort.u32DevId = 0;
@@ -184,7 +190,7 @@ namespace CXS{
                     printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
                     printf("stBindInfo.u32DstFrmrate : %d \n",stBindInfo.u32DstFrmrate);
                     printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
-                    */
+                }
             }
             return ret;
         }

@@ -343,6 +343,11 @@ namespace CXS{
             MI_VPE_CHANNEL vpechn = vifDev;
             MI_SNR_PAD_ID_e eSnrPadId = (MI_SNR_PAD_ID_e)atoi(this->getAttr("eSnrPad","0").c_str());
 
+
+            printf("\n\n\n\n\n=============== VIF============ \n");
+            printf("eSnrPadId : %d \n",eSnrPadId);
+            printf("vifDev : %d \n",vifDev);
+            
             memset(&stPad0Info, 0x0, sizeof(MI_SNR_PADInfo_t));
             MI_SNR_SetPlaneMode(eSnrPadId, FALSE);
             MI_SNR_SetRes(eSnrPadId,0);
@@ -366,16 +371,15 @@ namespace CXS{
 
             stDevAttr.eBitOrder = E_MI_VIF_BITORDER_NORMAL; 
             
-            MI_VIF_SetDevAttr(vifDev, &stDevAttr);
-            MI_VIF_EnableDev(vifDev);
-            printf("\n\n\n\n\n=============== VIF============ \n");
-            printf("eSnrPadId : %d \n",eSnrPadId);
-            printf("vifDev : %d \n",vifDev);
             printf("stDevAttr.eIntfMode : %d \n",stDevAttr.eIntfMode);
             printf("stDevAttr.eWorkMode : %d \n",stDevAttr.eWorkMode);
             printf("stDevAttr.eHDRType : %d \n",stDevAttr.eHDRType);
             printf("stDevAttr.eDataSeq : %d \n",stDevAttr.eDataSeq);
             printf("stDevAttr.eBitOrder : %d \n",stDevAttr.eBitOrder);
+
+            MI_VIF_SetDevAttr(vifDev, &stDevAttr);
+            MI_VIF_EnableDev(vifDev);
+           
 
             MI_U32 u32InputPort = atoi(this->getAttr("u32InputPort","0").c_str());
             MI_U32 u32CapWidth = 0, u32CapHeight = 0;
@@ -400,6 +404,7 @@ namespace CXS{
             stVifPortInfoInfo.ePixFormat = ePixFormat;//E_MI_SYS_PIXEL_FRAME_RGB_BAYER_12BPP_GR;
             ST_Vif_CreatePort(vifChn, u32InputPort, &stVifPortInfoInfo);
             ST_Vif_StartPort(0, vifChn, u32InputPort);
+            printf("\n\n\n\n ============= VIF INIT============== \n");
             printf("vifChn : %d \n",vifChn);
             printf("u32InputPort : %d \n",u32InputPort);
             printf("stVifPortInfoInfo.u32RectX : %d \n",stVifPortInfoInfo.u32RectX);
@@ -497,112 +502,112 @@ namespace CXS{
                     printf("stBindInfo.u32SrcFrmrate : %d \n",stBindInfo.u32SrcFrmrate);
                     printf(" stBindInfo.u32DstFrmrate : %d \n", stBindInfo.u32DstFrmrate );
                     printf("stBindInfo.eBindType : %d \n",stBindInfo.eBindType);
-            
 
-
-
-            memset(&stChnPort, 0x0, sizeof(MI_SYS_ChnPort_t));
-            stChnPort.eModId = E_MI_MODULE_ID_VPE;
-            stChnPort.u32DevId = vifDev;
-            stChnPort.u32ChnId = vpechn;
-            stChnPort.u32PortId = 0;
-
-            ret = MI_SYS_SetChnOutputPortDepth(&stChnPort, 2, 3); 
-            if (MI_SUCCESS != ret)
-            {
-                ST_ERR("MI_SYS_SetChnOutputPortDepth err:%x, chn:%d,port:%d\n", ret, stChnPort.u32ChnId, stChnPort.u32PortId);
-                return 1; 
-            }
-
-            ret = MI_SYS_GetFd(&stChnPort, &s32Fd); 
-            if(MI_SUCCESS != ret)
-            {
-                ST_ERR("MI_SYS_GetFd 0, error, %X\n", ret);
-                return 1; 
-            }
-            MI_VENC_GetChnDevid(vencChn, &u32VencDevId);
-            memset(&stVencChnInput,0,sizeof(MI_SYS_ChnPort_t));
-            stVencChnInput.eModId = E_MI_MODULE_ID_VENC;
-            stVencChnInput.u32DevId = u32VencDevId;
-            stVencChnInput.u32ChnId = vencChn;
-            stVencChnInput.u32PortId = 0;
-                   
-            while(1)
-            {
-                FD_ZERO(&read_fds);
-                FD_SET(s32Fd, &read_fds);
-                TimeoutVal.tv_sec = 1;
-                TimeoutVal.tv_usec = 0;
-                ret = select(s32Fd + 1, &read_fds, NULL, NULL, &TimeoutVal);
-                if(ret < 0)
+                std::string mode = this->getAttr("mode","0");
+                
+                if(mode == "regroup")
                 {
-                    ST_ERR("select failed!\n"); // usleep(10 * 1000); continue;
-                    continue;
-                }
-                else if(ret == 0) 
-                {
-                    ST_ERR("get vif frame time out\n"); //usleep(10 * 1000);
-                    continue;
-                }
-                else
-                {
-                    if(FD_ISSET(s32Fd, &read_fds))
+                    memset(&stChnPort, 0x0, sizeof(MI_SYS_ChnPort_t));
+                    stChnPort.eModId = E_MI_MODULE_ID_VPE;
+                    stChnPort.u32DevId = vifDev;
+                    stChnPort.u32ChnId = vpechn;
+                    stChnPort.u32PortId = 0;
+
+                    ret = MI_SYS_SetChnOutputPortDepth(&stChnPort, 2, 3); 
+                    if (MI_SUCCESS != ret)
                     {
-                        memset(&stBufInfo,0,sizeof(MI_SYS_BufInfo_t));
-                        ret = MI_SYS_ChnOutputPortGetBuf(&stChnPort, &stBufInfo, &hHandle);
-                        if(ret != MI_SUCCESS)
+                        ST_ERR("MI_SYS_SetChnOutputPortDepth err:%x, chn:%d,port:%d\n", ret, stChnPort.u32ChnId, stChnPort.u32PortId);
+                        return 1; 
+                    }
+
+                    ret = MI_SYS_GetFd(&stChnPort, &s32Fd); 
+                    if(MI_SUCCESS != ret)
+                    {
+                        ST_ERR("MI_SYS_GetFd 0, error, %X\n", ret);
+                        return 1; 
+                    }
+                    MI_VENC_GetChnDevid(vencChn, &u32VencDevId);
+                    memset(&stVencChnInput,0,sizeof(MI_SYS_ChnPort_t));
+                    stVencChnInput.eModId = E_MI_MODULE_ID_VENC;
+                    stVencChnInput.u32DevId = u32VencDevId;
+                    stVencChnInput.u32ChnId = vencChn;
+                    stVencChnInput.u32PortId = 0;
+
+                    while(1)
+                    {
+                        FD_ZERO(&read_fds);
+                        FD_SET(s32Fd, &read_fds);
+                        TimeoutVal.tv_sec = 1;
+                        TimeoutVal.tv_usec = 0;
+                        ret = select(s32Fd + 1, &read_fds, NULL, NULL, &TimeoutVal);
+                        if(ret < 0)
                         {
-                            MI_SYS_ChnOutputPortPutBuf(hHandle);  
+                            ST_ERR("select failed!\n"); // usleep(10 * 1000); continue;
+                            continue;
+                        }
+                        else if(ret == 0) 
+                        {
+                            ST_ERR("get vif frame time out\n"); //usleep(10 * 1000);
                             continue;
                         }
                         else
                         {
-                            memset(&stVencBufConf,0,sizeof(MI_SYS_BufConf_t));
-                            stVencBufConf.eBufType = E_MI_SYS_BUFDATA_FRAME;
-                            gettimeofday(&stTv, NULL);
-                            stVencBufConf.u64TargetPts = stTv.tv_sec*1000000 + stTv.tv_usec;
-                            stVencBufConf.stFrameCfg.eFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
-                            stVencBufConf.stFrameCfg.eFrameScanMode = E_MI_SYS_FRAME_SCAN_MODE_PROGRESSIVE; 
-                            stVencBufConf.stFrameCfg.u16Width = vencResolution.width;
-                            stVencBufConf.stFrameCfg.u16Height = vencResolution.height;
-                            size = stBufInfo.stFrameData.u32BufSize;
-                            
-                            ret = MI_SYS_ChnInputPortGetBuf(&stVencChnInput,&stVencBufConf,&stVencBufInfo,&hVencHandle,0);
-                            if(ret == 0)
+                            if(FD_ISSET(s32Fd, &read_fds))
                             {
-                                // memcpy(stVencBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.pVirAddr[0],1920*1080);
-                                // memcpy(stVencBufInfo.stFrameData.pVirAddr[1],stBufInfo.stFrameData.pVirAddr[1],1920*1080/2);
-
-                                TY_WEB_PARA webPara;
-                                int layNum;
-                                int i = 0;
-                                memset(&webPara,0,sizeof(TY_WEB_PARA));
-                                webPara.dst_horizontal_blks = atoi(this->getAttr("dst_horizontal_blks","0").c_str());
-                                webPara.dst_vertical_blks = atoi(this->getAttr("dst_vertical_blks","0").c_str());
-                                layNum = atoi(this->getAttr("layNum","0").c_str());
-
-                                // // memset(&(webPara->layer_layout_tab),-1,MAX_LAYER_NUMS);
-                                for(int i = 0;i<layNum;i++)
+                                memset(&stBufInfo,0,sizeof(MI_SYS_BufInfo_t));
+                                ret = MI_SYS_ChnOutputPortGetBuf(&stChnPort, &stBufInfo, &hHandle);
+                                if(ret != MI_SUCCESS)
                                 {
-                                    std::string tabId = "tabId";
-                                    std::string tab = tabId + to_String(i);
-                                    webPara.layer_layout_tab[i] = atoi(this->getAttr(tab.c_str(),"0").c_str());
-                                    // printf("webPara->layer_layout_tab[%d] : %d \n",i,webPara.layer_layout_tab[i]);
+                                    MI_SYS_ChnOutputPortPutBuf(hHandle);  
+                                    continue;
                                 }
+                                else
+                                {
+                                    memset(&stVencBufConf,0,sizeof(MI_SYS_BufConf_t));
+                                    stVencBufConf.eBufType = E_MI_SYS_BUFDATA_FRAME;
+                                    gettimeofday(&stTv, NULL);
+                                    stVencBufConf.u64TargetPts = stTv.tv_sec*1000000 + stTv.tv_usec;
+                                    stVencBufConf.stFrameCfg.eFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
+                                    stVencBufConf.stFrameCfg.eFrameScanMode = E_MI_SYS_FRAME_SCAN_MODE_PROGRESSIVE; 
+                                    stVencBufConf.stFrameCfg.u16Width = vencResolution.width;
+                                    stVencBufConf.stFrameCfg.u16Height = vencResolution.height;
+                                    size = stBufInfo.stFrameData.u32BufSize;
+                                    
+                                    ret = MI_SYS_ChnInputPortGetBuf(&stVencChnInput,&stVencBufConf,&stVencBufInfo,&hVencHandle,0);
+                                    if(ret == 0)
+                                    {
+                                        // memcpy(stVencBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.pVirAddr[0],1920*1080);
+                                        // memcpy(stVencBufInfo.stFrameData.pVirAddr[1],stBufInfo.stFrameData.pVirAddr[1],1920*1080/2);
 
-                                reorganizeYUV(&(stBufInfo.stFrameData),&(stVencBufInfo.stFrameData),&webPara);
+                                        TY_WEB_PARA webPara;
+                                        int layNum;
+                                        int i = 0;
+                                        memset(&webPara,0,sizeof(TY_WEB_PARA));
+                                        webPara.dst_horizontal_blks = atoi(this->getAttr("dst_horizontal_blks","0").c_str());
+                                        webPara.dst_vertical_blks = atoi(this->getAttr("dst_vertical_blks","0").c_str());
+                                        layNum = atoi(this->getAttr("layNum","0").c_str());
+                                        for(int i = 0;i<layNum;i++)
+                                        {
+                                            std::string tabId = "tabId";
+                                            std::string tab = tabId + to_String(i);
+                                            webPara.layer_layout_tab[i] = atoi(this->getAttr(tab.c_str(),"0").c_str());
+                                        }
+
+                                        reorganizeYUV(&(stBufInfo.stFrameData),&(stVencBufInfo.stFrameData),&webPara);
+                                    }
+                                    MI_SYS_ChnInputPortPutBuf(hVencHandle,&stVencBufInfo,FALSE);
+                                    MI_SYS_ChnOutputPortPutBuf(hHandle);  
+                                }
                             }
-                            MI_SYS_ChnInputPortPutBuf(hVencHandle,&stVencBufInfo,FALSE);
-                            MI_SYS_ChnOutputPortPutBuf(hHandle);  
                         }
-                    }
+                    }      
                 }
             }
-                    
-        }
             return ret;
-        }
-    };
+
+        }  
+    
+};
     static int init()
     {
         return MI_SUCCESS;
