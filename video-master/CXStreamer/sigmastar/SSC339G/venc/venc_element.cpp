@@ -127,8 +127,7 @@ namespace CXS
             MI_VENC_ModType_e eType;
 
             VencChn = atoi(this->getAttr("vencChn", "0").c_str());
-            tmpResolution = this->getAttr("relolution", "FHD");
-
+            tmpResolution = this->getAttr("resolution", "0");
             if (tmpResolution == "4K")
             {
                 maxResolution.width = 3840;
@@ -136,7 +135,7 @@ namespace CXS
                 vpeResolution.width = 3840;
                 vpeResolution.height = 2160;
             }
-            if (tmpResolution == "FHD")
+            else if (tmpResolution == "FHD")
             {
                 maxResolution.width = 3840;
                 maxResolution.height = 2160;
@@ -178,9 +177,7 @@ namespace CXS
             stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = 30;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen = 1;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime = 0;
-
             stChnAttr.stVeAttr.eType = eType;
-
             STCHECKRESULT(ST_Venc_CreateChannel(VencChn, &stChnAttr));
             STCHECKRESULT(ST_Venc_StartChannel(VencChn));
             pthread_create(&pthreadId, NULL, getH264data, (void *)this);

@@ -54,7 +54,7 @@ namespace CXS
             pixelFormat = (MI_SYS_PixelFormat_e)atoi(this->getAttr("pixelFormat", "35").c_str());
             tmpSensorId = this->getAttr("sensorId", "0");
 
-            tmpResolution = this->getAttr("relolution", "FHD");
+            tmpResolution = this->getAttr("resolution", "FHD");
             if (tmpResolution == "4K")
             {
                 maxResolution.width = 3840;
@@ -107,6 +107,10 @@ namespace CXS
             stVpePortInfo.u16OutputHeight = vpeResolution.height;
             stVpePortInfo.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
             stVpePortInfo.eCompressMode = E_MI_SYS_COMPRESS_MODE_NONE;
+
+            printf("\n\n\n\n\n stVpePortInfo.u16OutputWidth  : %d \n",stVpePortInfo.u16OutputWidth);
+            printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
+
             STCHECKRESULT(ST_Vpe_StartPort(0, &stVpePortInfo));
 
             return ret;

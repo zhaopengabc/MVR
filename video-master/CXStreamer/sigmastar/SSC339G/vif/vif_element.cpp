@@ -127,8 +127,13 @@ namespace CXS
             std::string tmpResolution;
             fd_set read_fds;
 
-            tmpResolution = VifElement->getAttr("relolution", "FHD");
-            if (tmpResolution == "FHD")
+            tmpResolution = VifElement->getAttr("resolution", "FHD");
+            if (tmpResolution == "4K")
+            {
+                vencResolution.width = 3840;
+                vencResolution.height = 2160;
+            }
+            else if (tmpResolution == "FHD")
             {
                 vencResolution.width = 1920;
                 vencResolution.height = 1080;
