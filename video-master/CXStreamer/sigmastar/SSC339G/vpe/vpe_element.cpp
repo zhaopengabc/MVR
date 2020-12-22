@@ -49,8 +49,12 @@ namespace CXS
             MI_VPE_SensorChannel_e eBindSensorId;
             std::string tmpSensorId;
             std::string tmpResolution;
+            // std::string scaleResolution;
             TY_RESOLUTION maxResolution;
             TY_RESOLUTION vpeResolution;
+            TY_RESOLUTION scaleResolution;
+
+
 
             vpechn = atoi(this->getAttr("vpeChn", "0").c_str());
             pixelFormat = (MI_SYS_PixelFormat_e)atoi(this->getAttr("pixelFormat", "35").c_str());
@@ -79,6 +83,22 @@ namespace CXS
                 vpeResolution.height = 720;
             }
 
+            tmpResolution = this->getAttr("scale", "FHD");
+            if(tmpResolution == "4K")
+            {
+                scaleResolution.width = 3840;
+                scaleResolution.height = 2160;
+            }
+            else if(tmpResolution == "FHD")
+            {
+                scaleResolution.width = 1920;
+                scaleResolution.height = 1080;
+            }
+            else if(tmpResolution == "HD")
+            {
+                scaleResolution.width = 1280;
+                scaleResolution.height = 720;
+            }
             if (tmpSensorId == "0")
             {
                 eBindSensorId = E_MI_VPE_SENSOR0;
@@ -133,8 +153,8 @@ namespace CXS
                 MI_DIVP_OutputPortAttr_t stDivpOutputPortAttr;
                 stDivpOutputPortAttr.eCompMode = E_MI_SYS_COMPRESS_MODE_NONE;
                 stDivpOutputPortAttr.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
-                stDivpOutputPortAttr.u32Width = 3840;
-                stDivpOutputPortAttr.u32Height = 2160;
+                stDivpOutputPortAttr.u32Width = scaleResolution.width;
+                stDivpOutputPortAttr.u32Height = vpeResolution.height;
                 MI_DIVP_SetOutputPortAttr(DivpChn, &stDivpOutputPortAttr);
                 ExecFunc(MI_DIVP_StartChn(DivpChn), MI_SUCCESS);
             }

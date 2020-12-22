@@ -436,13 +436,14 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
             elemVps->setAttr("pixelFormat", "35");
             elemVps->setAttr("sensorId", "0");
             elemVps->setAttr("resolution", "4K");
+            elemVps->setAttr("scale", "FHD");
             instance->mElemHead1->link(elemVps); // vif ->vep
 
 
             // elemVps->setAttr("ReGropMode", "No-Regroup");
 
             elemVenc0->setAttr("vencChn", "0");
-            elemVenc0->setAttr("resolution", "4K");
+            elemVenc0->setAttr("resolution", "FHD");
             elemVenc0->setAttr("compressionType", "H264");
 
             elemVps->link(elemVenc0); //vep -> venc
