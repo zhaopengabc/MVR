@@ -90,7 +90,7 @@ namespace CXS
                         len = stStream.pstPack[0].u32Len;
                         data = (uint8_t *)malloc(len);
                         memcpy(data, stStream.pstPack[0].pu8Addr, len);
-
+                        // printf("len : %d \n",len);
                         struct Buffer buf = {data, (size_t)len};
                         elem->pushNext(&buf);
 
@@ -128,6 +128,7 @@ namespace CXS
 
             VencChn = atoi(this->getAttr("vencChn", "0").c_str());
             tmpResolution = this->getAttr("resolution", "0");
+            printf("tmpResolution : %s \n",tmpResolution.c_str());
             if (tmpResolution == "4K")
             {
                 maxResolution.width = 3840;
@@ -174,10 +175,11 @@ namespace CXS
             stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate = u32VenBitRate;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel = 0;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop = 30;
-            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = 30;
+            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = 20;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen = 1;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime = 0;
             stChnAttr.stVeAttr.eType = eType;
+
             STCHECKRESULT(ST_Venc_CreateChannel(VencChn, &stChnAttr));
             STCHECKRESULT(ST_Venc_StartChannel(VencChn));
             pthread_create(&pthreadId, NULL, getH264data, (void *)this);

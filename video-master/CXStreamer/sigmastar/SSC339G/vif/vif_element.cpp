@@ -70,8 +70,8 @@ namespace CXS
         static int reorganizeYUV(MI_SYS_FrameData_t *inFrameData, MI_SYS_FrameData_t *outFrameData, TY_WEB_PARA *webPara)
         {
             int layerId = -1;
-            int vi_w = 1920;
-            int vi_h = 1080;
+            int vi_w = 3840;
+            int vi_h = 2160;
             int blk_w = vi_w / webPara->dst_horizontal_blks;
             int blk_h = vi_h / webPara->dst_vertical_blks;
             for (int i = 0; i < webPara->dst_horizontal_blks * webPara->dst_vertical_blks; i++)
@@ -165,7 +165,7 @@ namespace CXS
 
             MI_VENC_GetChnDevid(vencChn, &u32VencDevId);
             memset(&stVencChnInput, 0, sizeof(MI_SYS_ChnPort_t));
-            stVencChnInput.eModId = E_MI_MODULE_ID_VENC;
+            stVencChnInput.eModId = E_MI_MODULE_ID_DIVP;
             stVencChnInput.u32DevId = u32VencDevId;
             stVencChnInput.u32ChnId = vencChn;
             stVencChnInput.u32PortId = 0;
@@ -341,8 +341,8 @@ namespace CXS
                 stBindInfo.stDstChnPort.u32ChnId = vpechn;
                 stBindInfo.stDstChnPort.u32PortId = 0;
 
-                stBindInfo.u32SrcFrmrate = 30;
-                stBindInfo.u32DstFrmrate = 30;
+                stBindInfo.u32SrcFrmrate = 20;
+                stBindInfo.u32DstFrmrate = 20;
                 stBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
                 STCHECKRESULT(ST_Sys_Bind(&stBindInfo));
 

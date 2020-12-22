@@ -402,7 +402,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
             instance->mElemHead1->setAttr("vifDev", "0");
             instance->mElemHead1->setAttr("u32InputPort", "0");
             instance->mElemHead1->setAttr("vencChn", "0");
-            instance->mElemHead1->setAttr("resolution", "FHD");
+            instance->mElemHead1->setAttr("resolution", "4K");
             instance->mElemHead1->setAttr("mode", "regroup");
 
             dst_horizontal_blks = 8;
@@ -416,7 +416,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
 
             for (int i = 0; i < MAX_LAYER_NUMS; i++)
             {
-                layer_layout_tab[i] = 63 - i;
+                layer_layout_tab[i] = 63-i;
                 if (layer_layout_tab[i] != -1)
                 {
                     std::string tabId = "tabId";
@@ -431,18 +431,23 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
                     break;
                 }
             }
-            instance->mElemHead1->link(elemVps); // vif ->vep
-
             elemVps->setAttr("vpeChn", "0");
             elemVps->setAttr("vencChn", "0");
             elemVps->setAttr("pixelFormat", "35");
             elemVps->setAttr("sensorId", "0");
-            elemVps->setAttr("resolution", "FHD");
-            elemVps->link(elemVenc0); //vep -> venc
+            elemVps->setAttr("resolution", "4K");
+            instance->mElemHead1->link(elemVps); // vif ->vep
+
+
+            // elemVps->setAttr("ReGropMode", "No-Regroup");
 
             elemVenc0->setAttr("vencChn", "0");
-            elemVenc0->setAttr("resolution", "FHD");
+            elemVenc0->setAttr("resolution", "4K");
             elemVenc0->setAttr("compressionType", "H264");
+
+            elemVps->link(elemVenc0); //vep -> venc
+
+
             elemVenc0->link(rtsp_server0); //venc -> rtsp
 
             // ws_server0 = factory_common->createElementByName("ws-server");
@@ -461,20 +466,20 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
             instance->mElemHead2->setAttr("vifDev", "2");
             instance->mElemHead2->setAttr("u32InputPort", "0");
             instance->mElemHead2->setAttr("vencChn", "2");
-            instance->mElemHead2->setAttr("resolution", "4K");
+            instance->mElemHead2->setAttr("resolution", "HD");
             instance->mElemHead2->link(elemVpe1); // vif ->vep
 
             elemVpe1->setAttr("vpeChn", "2");
             elemVpe1->setAttr("vencChn", "2");
             elemVpe1->setAttr("pixelFormat", "44");
             elemVpe1->setAttr("sensorId", "1");
-            elemVpe1->setAttr("resolution", "FHD");
+            elemVpe1->setAttr("resolution", "HD");
             elemVpe1->setAttr("ReGropMode", "No-Regroup");
 
             elemVpe1->link(elemVenc1); //vep -> venc
 
             elemVenc1->setAttr("vencChn", "2");
-            elemVenc1->setAttr("resolution", "FHD");
+            elemVenc1->setAttr("resolution", "HD");
             elemVenc1->setAttr("compressionType", "H264");
             elemVenc1->link(rtsp_server1); //venc -> rtsp
 

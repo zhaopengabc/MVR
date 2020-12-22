@@ -7,6 +7,7 @@
 #include "st_vpe.h"
 #include "st_venc.h"
 #include <sys/time.h>
+#include "mi_divp.h"
 
 namespace CXS
 {
@@ -37,6 +38,7 @@ namespace CXS
             MI_VIF_DEV vifDev;
             MI_VPE_CHANNEL vpechn;
             MI_VENC_CHN VencChn;
+            MI_U32 DivpChn = 0;
             /************************************************
             Step3:  init VPE (create one VPE)
             *************************************************/
@@ -107,11 +109,37 @@ namespace CXS
             stVpePortInfo.u16OutputHeight = vpeResolution.height;
             stVpePortInfo.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
             stVpePortInfo.eCompressMode = E_MI_SYS_COMPRESS_MODE_NONE;
-
-            printf("\n\n\n\n\n stVpePortInfo.u16OutputWidth  : %d \n",stVpePortInfo.u16OutputWidth);
-            printf("stVpePortInfo.u16OutputHeight : %d \n",stVpePortInfo.u16OutputHeight);
-
             STCHECKRESULT(ST_Vpe_StartPort(0, &stVpePortInfo));
+
+            std::string mode = this->getAttr("ReGropMode", "0");
+            if(mode != "No-Regroup")
+            {
+                MI_DIVP_ChnAttr_t stDivpChnAttr;
+                memset(&stDivpChnAttr, 0x00, sizeof(MI_DIVP_ChnAttr_t));
+
+                stDivpChnAttr.bHorMirror = FALSE;
+                stDivpChnAttr.bVerMirror = FALSE;
+                stDivpChnAttr.eDiType = E_MI_DIVP_DI_TYPE_OFF;
+                stDivpChnAttr.eRotateType = E_MI_SYS_ROTATE_NONE;
+                stDivpChnAttr.eTnrLevel = E_MI_DIVP_TNR_LEVEL_OFF;
+                stDivpChnAttr.stCropRect.u16X = 0;
+                stDivpChnAttr.stCropRect.u16Y = 0;
+                stDivpChnAttr.stCropRect.u16Width = 0;
+                stDivpChnAttr.stCropRect.u16Height = 0;
+                stDivpChnAttr.u32MaxWidth = maxResolution.width;
+                stDivpChnAttr.u32MaxHeight = maxResolution.height;
+
+                ExecFunc(MI_DIVP_CreateChn(DivpChn, &stDivpChnAttr), MI_SUCCESS);
+                MI_DIVP_OutputPortAttr_t stDivpOutputPortAttr;
+                stDivpOutputPortAttr.eCompMode = E_MI_SYS_COMPRESS_MODE_NONE;
+                stDivpOutputPortAttr.ePixelFormat = E_MI_SYS_PIXEL_FRAME_YUV_SEMIPLANAR_420;
+                stDivpOutputPortAttr.u32Width = 3840;
+                stDivpOutputPortAttr.u32Height = 2160;
+                MI_DIVP_SetOutputPortAttr(DivpChn, &stDivpOutputPortAttr);
+                ExecFunc(MI_DIVP_StartChn(DivpChn), MI_SUCCESS);
+            }
+            
+
 
             return ret;
         }
@@ -145,10 +173,46 @@ namespace CXS
                     stBindInfo.stDstChnPort.u32ChnId = VencChn;
                     stBindInfo.stDstChnPort.u32PortId = 0;
 
-                    stBindInfo.u32SrcFrmrate = 30;
-                    stBindInfo.u32DstFrmrate = 30;
+                    stBindInfo.u32SrcFrmrate = 20;
+                    stBindInfo.u32DstFrmrate = 20;
                     stBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
                     ret = ST_Sys_Bind(&stBindInfo);
+                }
+                else
+                {
+                    // ST_Sys_BindInfo_T DIVPstBindInfo;
+                    // memset(&DIVPstBindInfo, 0x00, sizeof(ST_Sys_BindInfo_T));
+                    // DIVPstBindInfo.stSrcChnPort.eModId = E_MI_MODULE_ID_VPE;
+                    // DIVPstBindInfo.stSrcChnPort.u32DevId = 0;
+                    // DIVPstBindInfo.stSrcChnPort.u32ChnId = 0;
+                    // DIVPstBindInfo.stSrcChnPort.u32PortId = 0;
+
+                    // DIVPstBindInfo.stDstChnPort.eModId = E_MI_MODULE_ID_DIVP;
+                    // DIVPstBindInfo.stDstChnPort.u32DevId = 0;
+                    // DIVPstBindInfo.stDstChnPort.u32ChnId = 0;
+                    // DIVPstBindInfo.stDstChnPort.u32PortId = 0;
+                    // DIVPstBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
+
+                    // DIVPstBindInfo.u32SrcFrmrate = 30;
+                    // DIVPstBindInfo.u32DstFrmrate = 30;
+                    // ST_Sys_Bind(&DIVPstBindInfo);   
+                    printf("\n\n\n\n\n\n");
+                    memset(&stBindInfo, 0x0, sizeof(ST_Sys_BindInfo_T));
+                    stBindInfo.stSrcChnPort.eModId = E_MI_MODULE_ID_DIVP;
+                    stBindInfo.stSrcChnPort.u32DevId = 0;
+                    stBindInfo.stSrcChnPort.u32ChnId = 0;
+                    stBindInfo.stSrcChnPort.u32PortId = 0;
+
+                    stBindInfo.stDstChnPort.eModId = E_MI_MODULE_ID_VENC;
+                    stBindInfo.stDstChnPort.u32DevId = u32VencDevId;
+                    stBindInfo.stDstChnPort.u32ChnId = VencChn;
+                    stBindInfo.stDstChnPort.u32PortId = 0;
+
+                    stBindInfo.u32SrcFrmrate = 20;
+                    stBindInfo.u32DstFrmrate = 20;
+                    stBindInfo.eBindType = E_MI_SYS_BIND_TYPE_FRAME_BASE;
+                    ret = ST_Sys_Bind(&stBindInfo);
+                                    
                 }
             }
             return ret;
