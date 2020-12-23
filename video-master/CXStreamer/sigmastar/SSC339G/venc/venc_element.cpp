@@ -163,7 +163,7 @@ namespace CXS
             }
 
             memset(&stChnAttr, 0x0, sizeof(MI_VENC_ChnAttr_t));
-            MI_S32 u32VenBitRate = 1024 * 1024 * 2;
+            // MI_S32 u32VenBitRate = 1024 * 1024 * 2;
             stChnAttr.stVeAttr.stAttrH264e.u32PicWidth = vpeResolution.width;
             stChnAttr.stVeAttr.stAttrH264e.u32PicHeight = vpeResolution.height;
             stChnAttr.stVeAttr.stAttrH264e.u32MaxPicWidth = maxResolution.width;
@@ -172,10 +172,10 @@ namespace CXS
             stChnAttr.stVeAttr.stAttrH264e.bByFrame = TRUE;
 
             stChnAttr.stRcAttr.eRcMode = eRcMode;
-            stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate = u32VenBitRate;
+            stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate = atoi(this->getAttr("biteRate", "0").c_str());
             stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel = 0;
-            stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop = 30;
-            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = 20;
+            stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop = atoi(this->getAttr("Gop", "0").c_str());
+            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = atoi(this->getAttr("frameData", "0").c_str());;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen = 1;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime = 0;
             stChnAttr.stVeAttr.eType = eType;

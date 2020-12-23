@@ -157,6 +157,7 @@ namespace CXS
                 stDivpOutputPortAttr.u32Height = vpeResolution.height;
                 MI_DIVP_SetOutputPortAttr(DivpChn, &stDivpOutputPortAttr);
                 ExecFunc(MI_DIVP_StartChn(DivpChn), MI_SUCCESS);
+                
             }
             
 
@@ -216,7 +217,6 @@ namespace CXS
                     // DIVPstBindInfo.u32SrcFrmrate = 30;
                     // DIVPstBindInfo.u32DstFrmrate = 30;
                     // ST_Sys_Bind(&DIVPstBindInfo);   
-                    printf("\n\n\n\n\n\n");
                     memset(&stBindInfo, 0x0, sizeof(ST_Sys_BindInfo_T));
                     stBindInfo.stSrcChnPort.eModId = E_MI_MODULE_ID_DIVP;
                     stBindInfo.stSrcChnPort.u32DevId = 0;

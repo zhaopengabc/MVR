@@ -213,22 +213,23 @@ namespace CXS
                             ret = MI_SYS_ChnInputPortGetBuf(&stVencChnInput, &stVencBufConf, &stVencBufInfo, &hVencHandle, 0);
                             if (ret == 0)
                             {
-                                TY_WEB_PARA webPara;
-                                int layNum;
-                                int i = 0;
-                                memset(&webPara, 0, sizeof(TY_WEB_PARA));
-                                webPara.dst_horizontal_blks = atoi(VifElement->getAttr("dst_horizontal_blks", "0").c_str());
-                                webPara.dst_vertical_blks = atoi(VifElement->getAttr("dst_vertical_blks", "0").c_str());
-                                layNum = atoi(VifElement->getAttr("layNum", "0").c_str());
-                                for (int i = 0; i < layNum; i++)
-                                {
-                                    std::string tabId = "tabId";
-                                    std::string tab = tabId + to_String(i);
-                                    webPara.layer_layout_tab[i] = atoi(VifElement->getAttr(tab.c_str(), "0").c_str());
-                                }
+                                // TY_WEB_PARA webPara;
+                                // int layNum;
+                                // int i = 0;
+                                // memset(&webPara, 0, sizeof(TY_WEB_PARA));
+                                // webPara.dst_horizontal_blks = atoi(VifElement->getAttr("dst_horizontal_blks", "0").c_str());
+                                // webPara.dst_vertical_blks = atoi(VifElement->getAttr("dst_vertical_blks", "0").c_str());
+                                // layNum = atoi(VifElement->getAttr("layNum", "0").c_str());
+                                // for (int i = 0; i < layNum; i++)
+                                // {
+                                //     std::string tabId = "tabId";
+                                //     std::string tab = tabId + to_String(i);
+                                //     webPara.layer_layout_tab[i] = atoi(VifElement->getAttr(tab.c_str(), "0").c_str());
+                                // }
 
-                                reorganizeYUV(&(stBufInfo.stFrameData), &(stVencBufInfo.stFrameData), &webPara);
+                                // reorganizeYUV(&(stBufInfo.stFrameData), &(stVencBufInfo.stFrameData), &webPara);
                             }
+                            memcpy(stVencBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.pVirAddr[0],stBufInfo.stFrameData.u32BufSize);
                             MI_SYS_ChnInputPortPutBuf(hVencHandle, &stVencBufInfo, FALSE);
                             MI_SYS_ChnOutputPortPutBuf(hHandle);
                         }
