@@ -94,8 +94,8 @@ public:
     static int RTSPCallBack_0(uint8_t *framedata, size_t datalen);
     static int RTSPCallBack_1(uint8_t *framedata, size_t datalen);
 
-    static CXS::Element *NovaEncoderInit(Nova_EnocderCfg nova_cfg, callback rtsp_push);
-    static CXS::Element *NovaEncoderInit(Nova_EnocderCfg nova_cfg);
+    static CXS::Element *NovaEncoderInit(int channel,Nova_EnocderCfg nova_cfg, callback rtsp_push);
+    // static CXS::Element *NovaEncoderInit(Nova_EnocderCfg nova_cfg);
 
     static int NovaEncoderDestroy();
     int start();

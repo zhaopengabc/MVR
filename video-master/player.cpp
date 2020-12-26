@@ -22,9 +22,6 @@ Player::Player()
     mElemHead1 = nullptr;
     mElemHead2 = nullptr;
 }
-CXS::Element *RTSPElement_0;
-CXS::Element *RTSPElement_1;
-
 
 extern "C"
 {
@@ -383,7 +380,7 @@ int Player::RTSPCallBack_0(uint8_t *framedata, size_t datalen)
     data.len = datalen;
     data.buffer = framedata;
     // printf("\n\n\n\n =================RTSP call back ... datalen : %d \n",datalen);
-    RTSPElement_0->pushData((void *)&data);
+    rtsp_server0->pushData((void *)&data);
 }
 int Player::RTSPCallBack_1(uint8_t *framedata, size_t datalen)
 {
@@ -391,7 +388,7 @@ int Player::RTSPCallBack_1(uint8_t *framedata, size_t datalen)
     data.len = datalen;
     data.buffer = framedata;
     // printf("\n\n\n\n =================RTSP call back ... datalen : %d \n",datalen);
-    RTSPElement_1->pushData((void *)&data);
+    rtsp_server1->pushData((void *)&data);
 }
 Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, uint8_t protocol)
 {
@@ -429,7 +426,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.settingData.loopFilter = true;
     encodeCfg.settingData.cacheLevel2 = true;
 
-    instance->mElemHead1 = NovaEncoderInit(encodeCfg, RTSPCallBack_0);
+    instance->mElemHead1 = NovaEncoderInit(chn1, encodeCfg, RTSPCallBack_0);
 
     encodeCfg.inputData.width = 1280;
     encodeCfg.inputData.height = 720;
@@ -461,190 +458,176 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.settingData.loopFilter = true;
     encodeCfg.settingData.cacheLevel2 = true;
 
-    instance->mElemHead2 = NovaEncoderInit(encodeCfg);
+    instance->mElemHead2 = NovaEncoderInit(chn2, encodeCfg, RTSPCallBack_1);
 
     return instance;
 }
-CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg)
+
+
+CXS::Element *Player::NovaEncoderInit(int channel, Nova_EnocderCfg nova_cfg, callback rtsp_push)
 {
-    CXS::Factory *factory = CXS::Factory::getFactoryInstanceByName("SSC339G");
-    CXS::Factory *factory_common = CXS::Factory::getFactoryInstanceByName("common");
-    cf_assert(factory != nullptr && factory_common != nullptr);
-
-    CXS::Element *mElemHead = factory->createElementByName("vif");
-    elemVpe1 = factory->createElementByName("vpe");
-    elemVenc1 = factory->createElementByName("venc");
-    rtsp_server1 = factory_common->createElementByName("rtsp-server");
-    rtsp_server1->setAttr("port", 555);
-    rtsp_server1->setAttr("payload", "h264");
-
-    mElemHead->setAttr("eSnrPad", "1");
-    mElemHead->setAttr("vifDev", "2");
-    mElemHead->setAttr("u32InputPort", "0");
-    mElemHead->setAttr("vencChn", "2");
-    mElemHead->setAttr("resolution", "HD");
-    mElemHead->link(elemVpe1); // vif ->vep
-
-    elemVpe1->setAttr("vpeChn", "2");
-    elemVpe1->setAttr("vencChn", "2");
-    elemVpe1->setAttr("pixelFormat", "44");
-    elemVpe1->setAttr("sensorId", "1");
-    elemVpe1->setAttr("resolution", "HD");
-    elemVpe1->setAttr("ReGropMode", "No-Regroup");
-
-    elemVpe1->link(elemVenc1); //vep -> venc
-
-    elemVenc1->setAttr("vencChn", "2");
-    elemVenc1->setAttr("resolution", "HD");
-    elemVenc1->setAttr("compressionType", "H264");
-    elemVenc1->setAttr("frameData", to_String(nova_cfg.rateCtlData.FrameRate));
-    elemVenc1->setAttr("biteRate", to_String(nova_cfg.rateCtlData.BitRate));
-    elemVenc1->setAttr("Gop", to_String(nova_cfg.gopData.lenght));
-
-    elemVenc1->link(rtsp_server1); //venc -> rtsp
-
-    mElemHead->mNextElems.push_back(elemVenc1);
-    mElemHead->mNextElems.push_back(rtsp_server1);
-
-    return mElemHead;
-}
-
-CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg,callback rtsp_push)
-{
-    // Player *instance = nullptr;
-    for (int i = 0; i < MAX_LAYER_NUMS; i++)
+    if (channel == 0)
     {
-        layer_layout_tab[i] = i;
+
+        for (int i = 0; i < MAX_LAYER_NUMS; i++)
+        {
+            layer_layout_tab[i] = i;
+        }
+        read_layout_conf();
+
+        // if (!instance)
+        // {
+        cf_threadpool_run(ws_server_run, nullptr);
+        CXS::Factory *factory = CXS::Factory::getFactoryInstanceByName("SSC339G");
+        CXS::Factory *factory_common = CXS::Factory::getFactoryInstanceByName("common");
+        cf_assert(factory != nullptr && factory_common != nullptr);
+
+        CXS::Element *mElemHead = factory->createElementByName("vif");
+        elemVps = factory->createElementByName("vpe");
+        elemVenc0 = factory->createElementByName("venc");
+        rtsp_server0 = factory_common->createElementByName("rtsp-server");
+
+        cf_assert(rtsp_server0 != nullptr);
+        rtsp_server0->setAttr("port", 554);
+        // std::string payload = elemVenc0->getAttr("VENC-PAYLOAD","");
+        rtsp_server0->setAttr("payload", "h264");
+
+        mElemHead->setAttr("eSnrPad", "0");
+        mElemHead->setAttr("vifDev", "0");
+        mElemHead->setAttr("u32InputPort", "0");
+        mElemHead->setAttr("vencChn", "0");
+        mElemHead->setAttr("resolution", "4K");
+        mElemHead->setAttr("mode", "regroup");
+
+        dst_horizontal_blks = 8;
+        dst_vertical_blks = 8;
+        std::string horizontal = to_String(dst_horizontal_blks);
+        mElemHead->setAttr("dst_horizontal_blks", horizontal);
+        std::string vertical = to_String(dst_vertical_blks);
+        mElemHead->setAttr("dst_vertical_blks", vertical);
+
+        mElemHead->setAttr("layNum", "64");
+
+        for (int i = 0; i < MAX_LAYER_NUMS; i++)
+        {
+            layer_layout_tab[i] = 63 - i;
+            if (layer_layout_tab[i] != -1)
+            {
+                std::string tabId = "tabId";
+                std::string layer_tab = to_String(layer_layout_tab[i]);
+                std::string tab = tabId + to_String(i);
+                mElemHead->setAttr(tab.c_str(), layer_tab);
+            }
+            else
+            {
+                std::string layNum = to_String(i + 1);
+
+                break;
+            }
+        }
+        elemVps->setAttr("vpeChn", "0");
+        elemVps->setAttr("vencChn", "0");
+        elemVps->setAttr("pixelFormat", "35");
+        elemVps->setAttr("sensorId", "0");
+        elemVps->setAttr("resolution", "4K");
+        elemVps->setAttr("scale", "FHD");
+        mElemHead->link(elemVps); // vif ->vep
+
+        // elemVps->setAttr("ReGropMode", "No-Regroup");
+
+        elemVenc0->setAttr("vencChn", "0");
+        elemVenc0->setAttr("resolution", "FHD");
+        elemVenc0->setAttr("compressionType", "H264");
+        elemVenc0->setAttr("frameData", to_String(nova_cfg.rateCtlData.FrameRate));
+        elemVenc0->setAttr("biteRate", to_String(nova_cfg.rateCtlData.BitRate));
+        elemVenc0->setAttr("Gop", to_String(nova_cfg.gopData.lenght));
+
+        elemVps->link(elemVenc0); //vep -> venc
+
+        elemVenc0->link(rtsp_server0); //venc -> rtsp
+
+        // ws_server0 = factory_common->createElementByName("ws-server");
+        // cf_assert(ws_server0 != nullptr );
+        // ws_server0->setAttr("port",port1);
+        // elemVenc0->link(ws_server0);
+        mElemHead->mNextElems.push_back(elemVenc0);
+        mElemHead->mNextElems.push_back(rtsp_server0);
+
+        mElemHead->startSelf();
+        elemVps->startSelf();
+        elemVenc0->startSelfData(rtsp_push);
+        rtsp_server0->startSelf();
+
+        return mElemHead;
     }
-    read_layout_conf();
-
-    // if (!instance)
-    // {
-    cf_threadpool_run(ws_server_run, nullptr);
-    CXS::Factory *factory = CXS::Factory::getFactoryInstanceByName("SSC339G");
-    CXS::Factory *factory_common = CXS::Factory::getFactoryInstanceByName("common");
-    cf_assert(factory != nullptr && factory_common != nullptr);
-
-    CXS::Element *mElemHead = factory->createElementByName("vif");
-    elemVps = factory->createElementByName("vpe");
-    elemVenc0 = factory->createElementByName("venc");
-    rtsp_server0 = factory_common->createElementByName("rtsp-server");
-
-    cf_assert(rtsp_server0 != nullptr);
-    rtsp_server0->setAttr("port", 554);
-    // std::string payload = elemVenc0->getAttr("VENC-PAYLOAD","");
-    rtsp_server0->setAttr("payload", "h264");
-
-    mElemHead->setAttr("eSnrPad", "0");
-    mElemHead->setAttr("vifDev", "0");
-    mElemHead->setAttr("u32InputPort", "0");
-    mElemHead->setAttr("vencChn", "0");
-    mElemHead->setAttr("resolution", "4K");
-    mElemHead->setAttr("mode", "regroup");
-
-    dst_horizontal_blks = 8;
-    dst_vertical_blks = 8;
-    std::string horizontal = to_String(dst_horizontal_blks);
-    mElemHead->setAttr("dst_horizontal_blks", horizontal);
-    std::string vertical = to_String(dst_vertical_blks);
-    mElemHead->setAttr("dst_vertical_blks", vertical);
-
-    mElemHead->setAttr("layNum", "64");
-
-    for (int i = 0; i < MAX_LAYER_NUMS; i++)
+    else if (channel == 1)
     {
-        layer_layout_tab[i] = 63 - i;
-        if (layer_layout_tab[i] != -1)
-        {
-            std::string tabId = "tabId";
-            std::string layer_tab = to_String(layer_layout_tab[i]);
-            std::string tab = tabId + to_String(i);
-            mElemHead->setAttr(tab.c_str(), layer_tab);
-        }
-        else
-        {
-            std::string layNum = to_String(i + 1);
+        CXS::Factory *factory = CXS::Factory::getFactoryInstanceByName("SSC339G");
+        CXS::Factory *factory_common = CXS::Factory::getFactoryInstanceByName("common");
+        cf_assert(factory != nullptr && factory_common != nullptr);
 
-            break;
-        }
+        CXS::Element *mElemHead = factory->createElementByName("vif");
+        elemVpe1 = factory->createElementByName("vpe");
+        elemVenc1 = factory->createElementByName("venc");
+        rtsp_server1 = factory_common->createElementByName("rtsp-server");
+        rtsp_server1->setAttr("port", 555);
+        rtsp_server1->setAttr("payload", "h264");
+
+        mElemHead->setAttr("eSnrPad", "1");
+        mElemHead->setAttr("vifDev", "2");
+        mElemHead->setAttr("u32InputPort", "0");
+        mElemHead->setAttr("vencChn", "2");
+        mElemHead->setAttr("resolution", "HD");
+        mElemHead->link(elemVpe1); // vif ->vep
+
+        elemVpe1->setAttr("vpeChn", "2");
+        elemVpe1->setAttr("vencChn", "2");
+        elemVpe1->setAttr("pixelFormat", "44");
+        elemVpe1->setAttr("sensorId", "1");
+        elemVpe1->setAttr("resolution", "HD");
+        elemVpe1->setAttr("ReGropMode", "No-Regroup");
+
+        elemVpe1->link(elemVenc1); //vep -> venc
+
+        elemVenc1->setAttr("vencChn", "2");
+        elemVenc1->setAttr("resolution", "HD");
+        elemVenc1->setAttr("compressionType", "H264");
+        elemVenc1->setAttr("frameData", to_String(nova_cfg.rateCtlData.FrameRate));
+        elemVenc1->setAttr("biteRate", to_String(nova_cfg.rateCtlData.BitRate));
+        elemVenc1->setAttr("Gop", to_String(nova_cfg.gopData.lenght));
+
+        elemVenc1->link(rtsp_server1); //venc -> rtsp
+
+        mElemHead->mNextElems.push_back(elemVenc1);
+        mElemHead->mNextElems.push_back(rtsp_server1);
+
+        mElemHead->startSelf();
+
+        elemVpe1->startSelf();
+        elemVenc1->startSelfData(rtsp_push);
+        rtsp_server1->startSelf();
+
+        return mElemHead;
     }
-    elemVps->setAttr("vpeChn", "0");
-    elemVps->setAttr("vencChn", "0");
-    elemVps->setAttr("pixelFormat", "35");
-    elemVps->setAttr("sensorId", "0");
-    elemVps->setAttr("resolution", "4K");
-    elemVps->setAttr("scale", "FHD");
-    mElemHead->link(elemVps); // vif ->vep
-
-    // elemVps->setAttr("ReGropMode", "No-Regroup");
-
-    elemVenc0->setAttr("vencChn", "0");
-    elemVenc0->setAttr("resolution", "FHD");
-    elemVenc0->setAttr("compressionType", "H264");
-    elemVenc0->setAttr("frameData", to_String(nova_cfg.rateCtlData.FrameRate));
-    elemVenc0->setAttr("biteRate", to_String(nova_cfg.rateCtlData.BitRate));
-    elemVenc0->setAttr("Gop", to_String(nova_cfg.gopData.lenght));
-
-    elemVps->link(elemVenc0); //vep -> venc
-
-    elemVenc0->link(rtsp_server0); //venc -> rtsp
-
-    // ws_server0 = factory_common->createElementByName("ws-server");
-    // cf_assert(ws_server0 != nullptr );
-    // ws_server0->setAttr("port",port1);
-    // elemVenc0->link(ws_server0);
-    mElemHead->mNextElems.push_back(elemVenc0);
-    mElemHead->mNextElems.push_back(rtsp_server0);
-
-    return mElemHead;
 }
 
 int Player::start()
 {
     int res = 0;
-    // if(elemVenc0 )
-    //     elemVenc0->start();
-    struct Buffer data;
 
     if (mElemHead1)
     {
-        res = mElemHead1->startSelf();
-        printf("mElemHead1->mNextElems[0] size : %d \n", mElemHead1->mNextElems.size());
-        printf(" mElemHead1->mNextElems[0] name : %s \n", mElemHead1->mNextElems[0]->getClassName());
-        printf(" mElemHead1->mNextElems[1] name : %s \n", mElemHead1->mNextElems[1]->getClassName());
-        printf(" mElemHead1->mNextElems[2] name : %s \n", mElemHead1->mNextElems[2]->getClassName());
-        mElemHead1->mNextElems[0]->startSelf();
-        mElemHead1->mNextElems[1]->startSelfData(RTSPCallBack_0);
-        // mElemHead1->mNextElems[1]->startSelf();
-        mElemHead1->mNextElems[2]->startSelf();
-        RTSPElement_0 = mElemHead1->mNextElems[2];
         mElemHead1->mNextElems[1]->linkTo(mElemHead1->mNextElems[2]);
         mElemHead1->mNextElems[0]->linkTo(mElemHead1->mNextElems[1]);
         mElemHead1->linkTo(mElemHead1->mNextElems[0]);
-
-        // getchar();
-        // mElemHead1->mNextElems[1]->getData(&data);
-        // printf("data len : %d \n", data.len);
     }
 
-    // if (res == 0 && mElemHead2 && mElemHead1 != mElemHead2)
+    if (res == 0 && mElemHead2 && mElemHead1 != mElemHead2)
     {
-        res = mElemHead2->startSelf();
-        printf("mElemHead1->mNextElems[0] size : %d \n", mElemHead2->mNextElems.size());
-        printf(" mElemHead1->mNextElems[0] name : %s \n", mElemHead2->mNextElems[0]->getClassName());
-        printf(" mElemHead1->mNextElems[1] name : %s \n", mElemHead2->mNextElems[1]->getClassName());
-        printf(" mElemHead1->mNextElems[2] name : %s \n", mElemHead2->mNextElems[2]->getClassName());
-        mElemHead2->mNextElems[0]->startSelf();
-        mElemHead2->mNextElems[1]->startSelfData(RTSPCallBack_1);
-        // mElemHead2->mNextElems[1]->startSelf();
-
-        mElemHead2->mNextElems[2]->startSelf();
-        RTSPElement_1 = mElemHead2->mNextElems[2];
         mElemHead2->mNextElems[1]->linkTo(mElemHead1->mNextElems[2]);
         mElemHead2->mNextElems[0]->linkTo(mElemHead1->mNextElems[1]);
         mElemHead2->linkTo(mElemHead1->mNextElems[0]);
     }
-    // res = mElemHead2->start();
 
     return res;
 }

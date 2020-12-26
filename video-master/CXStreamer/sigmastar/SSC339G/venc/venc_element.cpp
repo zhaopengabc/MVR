@@ -127,12 +127,9 @@ namespace CXS
             MI_VENC_RcMode_e eRcMode;
             MI_VENC_ModType_e eType;
 
-            printf("\n\n\n\n ========");
             getData = _getData;
-            printf("_---------------------- \n");
             VencChn = atoi(this->getAttr("vencChn", "0").c_str());
             tmpResolution = this->getAttr("resolution", "0");
-            printf("tmpResolution : %s \n", tmpResolution.c_str());
             if (tmpResolution == "4K")
             {
                 maxResolution.width = 3840;
