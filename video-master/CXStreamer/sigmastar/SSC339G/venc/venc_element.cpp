@@ -13,7 +13,6 @@
 extern "C"
 {
 }
-
 namespace CXS
 {
 #define ELEMENT_CLASS_NAME "venc"
@@ -42,7 +41,7 @@ namespace CXS
 
     public:
         pthread_t pthreadId;
-
+        callback getData;
         static Element *createInstance()
         {
             static bool inited = false;
@@ -92,7 +91,8 @@ namespace CXS
                         memcpy(data, stStream.pstPack[0].pu8Addr, len);
                         // printf("len : %d \n",len);
                         struct Buffer buf = {data, (size_t)len};
-                        elem->pushNext(&buf);
+                        // elem->pushNext(&buf);
+                        elem->getData(data, len);
 
                         s32Ret = MI_VENC_ReleaseStream(VencChn, &stStream);
                         if (s32Ret != MI_SUCCESS)
@@ -109,7 +109,8 @@ namespace CXS
             }
             return 0;
         }
-        int startSelf()
+        int startSelfData(callback _getData)
+        // int startSelf()
         {
             int ret = 0;
             MI_VENC_CHN VencChn;
@@ -126,9 +127,12 @@ namespace CXS
             MI_VENC_RcMode_e eRcMode;
             MI_VENC_ModType_e eType;
 
+            printf("\n\n\n\n ========");
+            getData = _getData;
+            printf("_---------------------- \n");
             VencChn = atoi(this->getAttr("vencChn", "0").c_str());
             tmpResolution = this->getAttr("resolution", "0");
-            printf("tmpResolution : %s \n",tmpResolution.c_str());
+            printf("tmpResolution : %s \n", tmpResolution.c_str());
             if (tmpResolution == "4K")
             {
                 maxResolution.width = 3840;
@@ -175,7 +179,8 @@ namespace CXS
             stChnAttr.stRcAttr.stAttrH264Cbr.u32BitRate = atoi(this->getAttr("biteRate", "0").c_str());
             stChnAttr.stRcAttr.stAttrH264Cbr.u32FluctuateLevel = 0;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32Gop = atoi(this->getAttr("Gop", "0").c_str());
-            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = atoi(this->getAttr("frameData", "0").c_str());;
+            stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateNum = atoi(this->getAttr("frameData", "0").c_str());
+            ;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32SrcFrmRateDen = 1;
             stChnAttr.stRcAttr.stAttrH264Cbr.u32StatTime = 0;
             stChnAttr.stVeAttr.eType = eType;
@@ -188,6 +193,7 @@ namespace CXS
         }
         int linkTo(Element *elem)
         {
+            printf("venc link to RTSP \n\n\n");
             z_unused(elem);
 
             return 0;
@@ -196,6 +202,11 @@ namespace CXS
         {
             return MI_SUCCESS;
         }
+        // int getData(void *data)
+        // {
+        //     printf("-------------- \n");
+        //     return MI_SUCCESS;
+        // }
     };
 
     std::vector<VENCSSC339G *> VENCSSC339G::arr_VENCSSC339G = std::vector<VENCSSC339G *>(32);

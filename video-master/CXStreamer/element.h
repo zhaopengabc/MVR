@@ -12,7 +12,6 @@ namespace CXS{
         std::string mClassName;
         std::map<std::string,std::string> mAttrMap;
     protected:
-        std::vector<Element*> mNextElems;
         enum EState
         {
             Init,
@@ -21,10 +20,16 @@ namespace CXS{
         }m_state;
         Element(const char* className);
 
-        virtual int linkTo(Element* ){return 0;}
-        virtual int startSelf(){return true;}
-
     public:
+        typedef int(*callback)(uint8_t * ,size_t);
+
+        virtual int startSelf(){return true;}
+        virtual int startSelfData(callback _getData){return true;}
+        virtual int linkTo(Element* ){return 0;}
+
+        std::vector<Element*> mNextElems;
+
+
         const char* getClassName()const { return mClassName.data(); }
         void printOutElem(){
             printf("%s(%p) mOutPads.size=%u:\n",this->getClassName(),this,mNextElems.size());
@@ -33,6 +38,10 @@ namespace CXS{
             }
         }
         virtual ~Element();
+        // virtual int getData(void* )
+        // {
+        //     return 0;
+        // }
         virtual int pushData(void* )
         {
             return 0;
@@ -86,15 +95,15 @@ namespace CXS{
 
             if(startSelf() == 0 )
             {
-                for(size_t i = 0;i < mNextElems.size();i++)
-                {
+                // for(size_t i = 0;i < mNextElems.size();i++)
+                // {
 
-                    DEBUG("----------linkedElem(%u) %s\n",(uint32_t)i,mNextElems[i]->getClassName());
-                    if(mNextElems[i]->start() != 0 || linkTo(mNextElems[i]) != 0){
-                        stop();
-                        return -1;
-                    }
-                }
+                //     DEBUG("----------linkedElem(%u) %s\n",(uint32_t)i,mNextElems[i]->getClassName());
+                //     if(mNextElems[i]->start() != 0 || linkTo(mNextElems[i]) != 0){
+                //         stop();
+                //         return -1;
+                //     }
+                // }
                 m_state = Starting;
             }
             return 0;

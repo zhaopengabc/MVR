@@ -89,11 +89,13 @@ profile
     };
 
 public:
-    Player *getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, uint8_t protocol = 0);
+    static Player *getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, uint8_t protocol = 0);
+    typedef int(*callback)(uint8_t * ,size_t);
+    static int RTSPCallBack_0(uint8_t *framedata, size_t datalen);
+    static int RTSPCallBack_1(uint8_t *framedata, size_t datalen);
 
-    typedef int (*callback)(char *, uint32_t);
-    CXS::Element* NovaEncoderInit(Nova_EnocderCfg nova_cfg, callback rtsp_push);
-    CXS::Element* NovaEncoderInit(Nova_EnocderCfg nova_cfg);
+    static CXS::Element *NovaEncoderInit(Nova_EnocderCfg nova_cfg, callback rtsp_push);
+    static CXS::Element *NovaEncoderInit(Nova_EnocderCfg nova_cfg);
 
     static int NovaEncoderDestroy();
     int start();

@@ -246,6 +246,7 @@ namespace CXS
         }
         int startSelf()
         {
+            
             int s32Ret = 0;
             MI_SNR_PADInfo_t stPad0Info;
             MI_SNR_PlaneInfo_t stSnrPlane0Info;
@@ -279,7 +280,7 @@ namespace CXS
 
             MI_VIF_SetDevAttr(vifDev, &stDevAttr);
             MI_VIF_EnableDev(vifDev);
-
+            
             MI_U32 u32InputPort = atoi(this->getAttr("u32InputPort", "0").c_str());
             MI_U32 u32CapWidth = 0, u32CapHeight = 0;
             MI_VIF_FrameRate_e eFrameRate;
@@ -306,6 +307,7 @@ namespace CXS
             MI_ModuleId_e eVifModeId = E_MI_MODULE_ID_VIF;
             MI_U8 u8MmaHeap[128] = "mma_heap_name0";
             s32Ret = MI_SYS_SetChnMMAConf(eVifModeId, 0, vifChn, u8MmaHeap);
+            
 
             return s32Ret;
         }

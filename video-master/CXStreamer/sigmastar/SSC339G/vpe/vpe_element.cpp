@@ -34,14 +34,13 @@ namespace CXS
         }
         int startSelf()
         {
+            
             int ret = 0;
             MI_VIF_DEV vifDev;
             MI_VPE_CHANNEL vpechn;
             MI_VENC_CHN VencChn;
             MI_U32 DivpChn = 0;
-            /************************************************
-            Step3:  init VPE (create one VPE)
-            *************************************************/
+
             ST_VPE_ChannelInfo_T stVpeChannelInfo;
             ST_VPE_PortInfo_T stVpePortInfo;
 
@@ -163,6 +162,7 @@ namespace CXS
 
 
             return ret;
+            
         }
         int linkTo(Element *elem)
         {

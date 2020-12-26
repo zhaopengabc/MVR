@@ -12,11 +12,19 @@
 #define STREAM_CHN1_ON 1
 #define STREAM_CHN2_ON 1
 
+struct Buffer
+{
+    uint8_t *buffer;
+    size_t len;
+};
 Player::Player()
 {
     mElemHead1 = nullptr;
     mElemHead2 = nullptr;
 }
+CXS::Element *RTSPElement_0;
+CXS::Element *RTSPElement_1;
+
 
 extern "C"
 {
@@ -369,9 +377,21 @@ static void ws_server_run(void *)
     cf_websocket_server_run(server);
 }
 //arg == 1 for linkpi
-int RTSPCallBack(char *framedata, u_int32_t datalen)
+int Player::RTSPCallBack_0(uint8_t *framedata, size_t datalen)
 {
-    printf("\n\n\n\n RTSP call back ... \n");
+    struct Buffer data;
+    data.len = datalen;
+    data.buffer = framedata;
+    // printf("\n\n\n\n =================RTSP call back ... datalen : %d \n",datalen);
+    RTSPElement_0->pushData((void *)&data);
+}
+int Player::RTSPCallBack_1(uint8_t *framedata, size_t datalen)
+{
+    struct Buffer data;
+    data.len = datalen;
+    data.buffer = framedata;
+    // printf("\n\n\n\n =================RTSP call back ... datalen : %d \n",datalen);
+    RTSPElement_1->pushData((void *)&data);
 }
 Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, uint8_t protocol)
 {
@@ -409,8 +429,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.settingData.loopFilter = true;
     encodeCfg.settingData.cacheLevel2 = true;
 
-    instance->mElemHead1 = NovaEncoderInit(encodeCfg, RTSPCallBack);
-
+    instance->mElemHead1 = NovaEncoderInit(encodeCfg, RTSPCallBack_0);
 
     encodeCfg.inputData.width = 1280;
     encodeCfg.inputData.height = 720;
@@ -484,12 +503,15 @@ CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg)
 
     elemVenc1->link(rtsp_server1); //venc -> rtsp
 
+    mElemHead->mNextElems.push_back(elemVenc1);
+    mElemHead->mNextElems.push_back(rtsp_server1);
+
     return mElemHead;
 }
 
-CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg, callback rtsp_push)
+CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg,callback rtsp_push)
 {
-    Player *instance = nullptr;
+    // Player *instance = nullptr;
     for (int i = 0; i < MAX_LAYER_NUMS; i++)
     {
         layer_layout_tab[i] = i;
@@ -571,43 +593,9 @@ CXS::Element *Player::NovaEncoderInit(Nova_EnocderCfg nova_cfg, callback rtsp_pu
     // cf_assert(ws_server0 != nullptr );
     // ws_server0->setAttr("port",port1);
     // elemVenc0->link(ws_server0);
-    /*
-        instance->mElemHead2 = factory->createElementByName("vif");
-        elemVpe1 = factory->createElementByName("vpe");
-        elemVenc1 = factory->createElementByName("venc");
-        rtsp_server1 = factory_common->createElementByName("rtsp-server");
-        rtsp_server1->setAttr("port", 555);
-        rtsp_server1->setAttr("payload", "h264");
+    mElemHead->mNextElems.push_back(elemVenc0);
+    mElemHead->mNextElems.push_back(rtsp_server0);
 
-        instance->mElemHead2->setAttr("eSnrPad", "1");
-        instance->mElemHead2->setAttr("vifDev", "2");
-        instance->mElemHead2->setAttr("u32InputPort", "0");
-        instance->mElemHead2->setAttr("vencChn", "2");
-        instance->mElemHead2->setAttr("resolution", "HD");
-        instance->mElemHead2->link(elemVpe1); // vif ->vep
-
-        elemVpe1->setAttr("vpeChn", "2");
-        elemVpe1->setAttr("vencChn", "2");
-        elemVpe1->setAttr("pixelFormat", "44");
-        elemVpe1->setAttr("sensorId", "1");
-        elemVpe1->setAttr("resolution", "HD");
-        elemVpe1->setAttr("ReGropMode", "No-Regroup");
-
-        elemVpe1->link(elemVenc1); //vep -> venc
-
-        elemVenc1->setAttr("vencChn", "2");
-        elemVenc1->setAttr("resolution", "HD");
-        elemVenc1->setAttr("compressionType", "H264");
-        elemVenc1->setAttr("frameData", to_String(nova_cfg.rateCtlData.FrameRate));
-        elemVenc1->setAttr("biteRate", to_String(nova_cfg.rateCtlData.BitRate));
-        elemVenc1->setAttr("Gop", to_String(nova_cfg.gopData.lenght));
-
-        elemVenc1->link(rtsp_server1); //venc -> rtsp
-
-        // NovaEncoderInit(Nova_EnocderCfg nova_cfg,callback rtsp_push);
-    // }
-    // instance->mElemHead1 = mElemHead;
-    */
     return mElemHead;
 }
 
@@ -616,11 +604,47 @@ int Player::start()
     int res = 0;
     // if(elemVenc0 )
     //     elemVenc0->start();
+    struct Buffer data;
 
     if (mElemHead1)
-        res = mElemHead1->start();
-    if (res == 0 && mElemHead2 && mElemHead1 != mElemHead2)
-        res = mElemHead2->start();
+    {
+        res = mElemHead1->startSelf();
+        printf("mElemHead1->mNextElems[0] size : %d \n", mElemHead1->mNextElems.size());
+        printf(" mElemHead1->mNextElems[0] name : %s \n", mElemHead1->mNextElems[0]->getClassName());
+        printf(" mElemHead1->mNextElems[1] name : %s \n", mElemHead1->mNextElems[1]->getClassName());
+        printf(" mElemHead1->mNextElems[2] name : %s \n", mElemHead1->mNextElems[2]->getClassName());
+        mElemHead1->mNextElems[0]->startSelf();
+        mElemHead1->mNextElems[1]->startSelfData(RTSPCallBack_0);
+        // mElemHead1->mNextElems[1]->startSelf();
+        mElemHead1->mNextElems[2]->startSelf();
+        RTSPElement_0 = mElemHead1->mNextElems[2];
+        mElemHead1->mNextElems[1]->linkTo(mElemHead1->mNextElems[2]);
+        mElemHead1->mNextElems[0]->linkTo(mElemHead1->mNextElems[1]);
+        mElemHead1->linkTo(mElemHead1->mNextElems[0]);
+
+        // getchar();
+        // mElemHead1->mNextElems[1]->getData(&data);
+        // printf("data len : %d \n", data.len);
+    }
+
+    // if (res == 0 && mElemHead2 && mElemHead1 != mElemHead2)
+    {
+        res = mElemHead2->startSelf();
+        printf("mElemHead1->mNextElems[0] size : %d \n", mElemHead2->mNextElems.size());
+        printf(" mElemHead1->mNextElems[0] name : %s \n", mElemHead2->mNextElems[0]->getClassName());
+        printf(" mElemHead1->mNextElems[1] name : %s \n", mElemHead2->mNextElems[1]->getClassName());
+        printf(" mElemHead1->mNextElems[2] name : %s \n", mElemHead2->mNextElems[2]->getClassName());
+        mElemHead2->mNextElems[0]->startSelf();
+        mElemHead2->mNextElems[1]->startSelfData(RTSPCallBack_1);
+        // mElemHead2->mNextElems[1]->startSelf();
+
+        mElemHead2->mNextElems[2]->startSelf();
+        RTSPElement_1 = mElemHead2->mNextElems[2];
+        mElemHead2->mNextElems[1]->linkTo(mElemHead1->mNextElems[2]);
+        mElemHead2->mNextElems[0]->linkTo(mElemHead1->mNextElems[1]);
+        mElemHead2->linkTo(mElemHead1->mNextElems[0]);
+    }
+    // res = mElemHead2->start();
 
     return res;
 }

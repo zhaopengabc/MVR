@@ -122,7 +122,7 @@ namespace CXS{
         }
         int linkTo(Element* elem){
             z_unused(elem);
-            return  -1  ;
+            return 0;
         }
     };
 
