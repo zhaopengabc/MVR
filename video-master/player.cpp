@@ -426,7 +426,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.settingData.loopFilter = true;
     encodeCfg.settingData.cacheLevel2 = true;
 
-    instance->mElemHead1 = NovaEncoderInit(chn1, encodeCfg, RTSPCallBack_0);
+    instance->mElemHead1 = (CXS::Element *)NovaEncoderInit(chn1, encodeCfg, RTSPCallBack_0);
 
     encodeCfg.inputData.width = 1280;
     encodeCfg.inputData.height = 720;
@@ -458,13 +458,13 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.settingData.loopFilter = true;
     encodeCfg.settingData.cacheLevel2 = true;
 
-    instance->mElemHead2 = NovaEncoderInit(chn2, encodeCfg, RTSPCallBack_1);
+    instance->mElemHead2 = (CXS::Element *)NovaEncoderInit(chn2, encodeCfg, RTSPCallBack_1);
 
     return instance;
 }
 
 
-CXS::Element *Player::NovaEncoderInit(int channel, Nova_EnocderCfg nova_cfg, callback rtsp_push)
+void *Player::NovaEncoderInit(int channel, Nova_EnocderCfg nova_cfg, callback rtsp_push)
 {
     if (channel == 0)
     {
