@@ -433,7 +433,7 @@ Player *Player::getInstance(int chn1, int chn2, uint16_t port1, uint16_t port2, 
     encodeCfg.inputData.format = 0;
 
     encodeCfg.rateCtlData.RateCtrlMode = 1;
-    encodeCfg.rateCtlData.FrameRate = 20;
+    encodeCfg.rateCtlData.FrameRate = 30;
     encodeCfg.rateCtlData.BitRate = 1024 * 1024 * 2;
     encodeCfg.rateCtlData.MaxBitRate = 1024 * 1024 * 2;
     encodeCfg.rateCtlData.SliceQP = -1;
@@ -475,8 +475,6 @@ void *Player::NovaEncoderInit(int channel, Nova_EnocderCfg nova_cfg, callback rt
         }
         read_layout_conf();
 
-        // if (!instance)
-        // {
         cf_threadpool_run(ws_server_run, nullptr);
         CXS::Factory *factory = CXS::Factory::getFactoryInstanceByName("SSC339G");
         CXS::Factory *factory_common = CXS::Factory::getFactoryInstanceByName("common");
@@ -510,7 +508,7 @@ void *Player::NovaEncoderInit(int channel, Nova_EnocderCfg nova_cfg, callback rt
 
         for (int i = 0; i < MAX_LAYER_NUMS; i++)
         {
-            layer_layout_tab[i] = 63 - i;
+            layer_layout_tab[i] =i;
             if (layer_layout_tab[i] != -1)
             {
                 std::string tabId = "tabId";
